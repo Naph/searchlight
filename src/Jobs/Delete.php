@@ -1,0 +1,26 @@
+<?php
+declare(strict_types=1);
+
+namespace Naph\Searchlight\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Naph\Searchlight\SearchlightDriver;
+use Naph\Searchlight\SearchlightContract;
+
+class Delete implements ShouldQueue
+{
+    use Queueable;
+
+    protected $searchable;
+
+    public function __construct(SearchlightContract $searchable)
+    {
+        $this->searchable = $searchable;
+    }
+
+    public function handle(SearchlightDriver $driver)
+    {
+        $driver->delete($this->searchable);
+    }
+}
