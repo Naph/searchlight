@@ -61,4 +61,4 @@ Documentation for Searchlight can be found in the Wiki
 Currently only supports PHP7 and Laravel 5.4.
 
 ## License
-Searchlight is an open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+Searchlight is an open-sourced software licensed under the [MIT license](https://raw.githubusercontent.com/Naph/searchlight/master/LICENSE).
