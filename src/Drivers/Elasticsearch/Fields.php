@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Velg\Searchable\Fields;
+namespace Naph\Searchlight\Drivers\Elasticsearch;
 
 class Fields
 {

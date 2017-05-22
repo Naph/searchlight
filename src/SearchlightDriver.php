@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 
 interface SearchlightDriver
 {
-    public static function create(array $config): SearchlightDriver;
+    public function __construct(string $index, array $config);
 
     public function index(SearchlightContract $model);
 

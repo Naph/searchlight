@@ -7,7 +7,6 @@ use Illuminate\Bus\Dispatcher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
 use Naph\Searchlight\Jobs\{Delete, Index};
 
@@ -26,7 +25,7 @@ trait SearchlightTrait
 
     public function getSearchableIndex(): string
     {
-        return Config::get('searchlight.index');
+        return App::make(SearchlightDriver::class)->getIndex();
     }
 
     public function getSearchableType(): string
@@ -90,7 +89,7 @@ trait SearchlightTrait
             return $this->query();
         }
 
-        $driver = App::resolve(SearchlightDriver::class);
+        $driver = App::make(SearchlightDriver::class);
 
         if ($query instanceof SearchlightBuilder) {
             if ($query->isEmpty()) {

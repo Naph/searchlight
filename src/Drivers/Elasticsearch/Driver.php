@@ -9,19 +9,22 @@ use Elasticsearch\Common\Exceptions\Missing404Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
-use Naph\Searchlight\Elasticsearch\Query;
+use Illuminate\Support\Facades\DB;
 use Naph\Searchlight\SearchlightBuilder;
 use Naph\Searchlight\SearchlightContract;
 use Naph\Searchlight\SearchlightDriver;
 
 class Driver implements SearchlightDriver
 {
+    protected $index;
+
     protected $config;
 
     protected $connection;
 
-    public function __construct(array $config)
+    public function __construct(string $index, array $config)
     {
+        $this->index = $index;
         $this->config = $config;
         $this->connection = ClientBuilder::create()->setHosts($config['hosts'])->build();
         try {
@@ -31,9 +34,9 @@ class Driver implements SearchlightDriver
         }
     }
 
-    public static function create(array $config): SearchlightDriver
+    public function getIndex()
     {
-        return new static($config);
+        return $this->index;
     }
 
     public function index(SearchlightContract $model)

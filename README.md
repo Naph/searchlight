@@ -1,21 +1,23 @@
 ## Searchlight
-Simple *Elasticsearch* and *Eloquent* search query language for **Laravel**.
+Simple *Elasticsearch* and *Eloquent* search query language for **Laravel** and **Lumen**.
 ```php
-Model::search('Documentation')->get();
+$model->search('Documentation')->get();
 ```
-
-
 ## Install
 Using composer
 ```bash
 composer require naph/searchlight
 ```
-Publish vendor files containing driver and host configuration
+Register the service provider
+```php
+Naph\Searchlight\SearchlightServiceProvider;
+```
+Publish vendor files containing driver and host configuration. Lumen users should copy the file instead. 
 ```bash
 php artisan vendor:publish --tag searchlight
 ```
-Setup models with the both the `SearchlightContract` and `SearchlightTrait` and implement the `getSearchableFields`
-method.
+Setup models by implementing the `SearchlightContract` and `SearchlightTrait`, override `getSearchableFields`
+method
 ```php
 <?php
 
@@ -41,24 +43,15 @@ class Topic extends Model implements SearchlightContract
     }
 }
 ```
-Build the new model's index ...
-```bash
-php artisan index:all
-```
-... and search the results!
+Updating model entries will index the document. Repositories stored in searchlight config will have their indices re/built using `php artisan index:all`. With indices, you may now use the trait's `search` method
 ```php
-public function search(Request $request)
+public function search(Request $request, Topic $topic)
 {
-    $builder = Topic::search($request->input('query'));
+    $builder = $topic->search($request->input('query'));
 }
 ```
-The static search method returns an Eloquent Builder of the search results allowing for deeper filtering.
-
-## Documentation
-Documentation for Searchlight can be found in the Wiki
-
+The static search method returns an Eloquent Builder of the search results allowing for deeper filtering. The Eloquent driver, when implemented, will work much the same but the final indexing step can be ignored.
 ## Requirements
 Currently only supports PHP7 and Laravel 5.4.
-
 ## License
 Searchlight is an open-sourced software licensed under the [MIT license](https://raw.githubusercontent.com/Naph/searchlight/master/LICENSE).

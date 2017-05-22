@@ -1,11 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Naph\Searchlight\Elasticsearch;
+namespace Naph\Searchlight\Drivers\Elasticsearch;
 
 use Naph\Searchlight\SearchlightQuery;
 use Naph\Searchlight\SearchlightBuilder;
-use Velg\Searchable\Fields\Fields;
 
 class Query implements SearchlightQuery
 {

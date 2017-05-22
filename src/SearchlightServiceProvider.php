@@ -12,8 +12,6 @@ class SearchlightServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        require_once __DIR__ . '/../vendor/autoload.php';
-
         if ($this->app->runningInConsole()) {
             $this->commands([
                 IndexAll::class,
@@ -33,7 +31,7 @@ class SearchlightServiceProvider extends ServiceProvider
 
         $this->app->singleton(SearchlightDriver::class, function($app) {
             $driver = $app['config']->get('searchlight.driver');
-            return new $driver['class']($driver['config']);
+            return new $driver['class']($app['config']->get('searchlight.index'), $driver['config']);
         });
     }
 
