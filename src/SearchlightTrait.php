@@ -83,17 +83,19 @@ trait SearchlightTrait
      * @param SearchlightBuilder|Request|string $query
      * @return Builder
      */
-    public function search($query): Builder
+    public static function search($query): Builder
     {
+        $model = new static();
+
         if (! $query) {
-            return $this->query();
+            return $model->query();
         }
 
         $driver = App::make(SearchlightDriver::class);
 
         if ($query instanceof SearchlightBuilder) {
             if ($query->isEmpty()) {
-                return $this->query();
+                return $model->query();
             }
 
             $query = $driver->buildQuery($query);
@@ -103,7 +105,7 @@ trait SearchlightTrait
             $query = $driver->buildQuery(self::searchQuery()->matches($query));
         }
 
-        return $driver->search($this, $query);
+        return $driver->search($model, $query);
     }
 
     public static function bootSearchableTrait(Dispatcher $dispatcher)
