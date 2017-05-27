@@ -29,7 +29,7 @@ class SearchlightServiceProvider extends ServiceProvider
             __DIR__.'/../config/searchlight.php', 'searchlight'
         );
 
-        $this->app->singleton(SearchlightDriver::class, function($app) {
+        $this->app->singleton(Driver::class, function($app) {
             $driver = $app['config']->get('searchlight.driver');
             return new $driver['class']($app['config']->get('searchlight.index'), $driver['config']);
         });
@@ -38,7 +38,7 @@ class SearchlightServiceProvider extends ServiceProvider
     public function provides()
     {
         return [
-            SearchlightDriver::class
+            Driver::class
         ];
     }
 }

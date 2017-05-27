@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Naph\Searchlight\Commands;
 
 use Illuminate\Console\Command;
-use Naph\Searchlight\SearchlightDriver;
+use Naph\Searchlight\Driver;
 
 class IndexClear extends Command
 {
@@ -12,7 +12,7 @@ class IndexClear extends Command
 
     protected $driver;
 
-    public function __construct(SearchlightDriver $driver)
+    public function __construct(Driver $driver)
     {
         parent::__construct();
 

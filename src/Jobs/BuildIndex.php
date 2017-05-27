@@ -8,7 +8,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\App;
-use Naph\Searchlight\SearchlightDriver;
+use Naph\Searchlight\Driver;
 
 class BuildIndex implements ShouldQueue
 {
@@ -22,7 +22,7 @@ class BuildIndex implements ShouldQueue
         $this->class = App::make($class);
     }
 
-    public function handle(SearchlightDriver $driver, Dispatcher $dispatcher)
+    public function handle(Driver $driver, Dispatcher $dispatcher)
     {
         set_time_limit(0);
 

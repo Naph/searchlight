@@ -1,0 +1,116 @@
+<?php
+
+namespace Naph\Searchlight;
+
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Support\Collection;
+use Naph\Searchlight\Model\SearchlightContract;
+
+class Search
+{
+    protected $driver;
+
+    protected $builder;
+
+    public function __construct(Driver $driver)
+    {
+        $this->driver = $driver;
+        $this->builder = $driver->builder();
+    }
+
+    public function in(SearchlightContract ...$models): Search
+    {
+        foreach ($models as $model) {
+            $this->builder->addModel($model);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Search by matching multiple fields with one query string
+     *
+     * @param string|array  $query
+     * @param string|array|null  $fields
+     *
+     * @return Search
+     */
+    public function match($query, $fields = null): Search
+    {
+        if (! $query) {
+            return $this;
+        }
+
+        $this->builder->addMatch(compact('query', 'fields'));
+
+        return $this;
+    }
+
+    /**
+     * Filter terms
+     *
+     *  Filter array example:
+     *  $array = [
+     *    'field' => 'query',
+     *    'field' => null,
+     *    ...
+     *  ];
+     *
+     * @param array $array
+     *
+     * @return Search
+     */
+    public function filter(array $array): Search
+    {
+        $this->builder->addFilter($array);
+
+        return $this;
+    }
+
+    /**
+     * Filter by range
+     *
+     * Range array example:
+     * $array = [
+     *   ['field', '>', 'number'],
+     *   ['field', '<', 'number'],
+     *   ...
+     * ];
+     *
+     * or as single:
+     * $array = ['term', '>=', 'number'];
+     *
+     * @param array $array
+     *
+     * @throws \UnexpectedValueException
+     * @return Search
+     */
+    public function range(array $array): Search
+    {
+        $range = is_array(reset($array)) ? $array : [$array];
+
+        foreach ($range as $key => $array) {
+            if (! ($array[2] ?? false)) {
+                unset($range[$key]);
+            }
+
+            if (! array_search($array[1], Builder::RANGE_OPERATORS)) {
+                throw new \UnexpectedValueException("Range operator is not recognised: `{$array[1]}`");
+            }
+        }
+
+        $this->builder->addRange($range);
+
+        return $this;
+    }
+
+    public function builder(): EloquentBuilder
+    {
+        return $this->builder->build();
+    }
+
+    public function get(): Collection
+    {
+        return $this->builder->get();
+    }
+}

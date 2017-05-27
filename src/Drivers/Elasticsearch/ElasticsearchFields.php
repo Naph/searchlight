@@ -1,9 +1,8 @@
 <?php
-declare(strict_types=1);
 
 namespace Naph\Searchlight\Drivers\Elasticsearch;
 
-class Fields
+class ElasticsearchFields
 {
     protected $fields;
 
@@ -13,22 +12,22 @@ class Fields
             throw new \Exception('No fields present.');
         }
 
-        $searchableFields = [];
+        $searchFields = [];
 
         foreach ($fields as $key => $value) {
             is_integer($key)
-                ? $searchableFields[] = ['field' => $value, 'boost' => 1.0]
-                : $searchableFields[] = ['field' => $key, 'boost' => floatval($value)];
+                ? $searchFields[] = ['field' => $value, 'boost' => 1.0]
+                : $searchFields[] = ['field' => $key, 'boost' => floatval($value)];
         }
 
-        usort($searchableFields, function($a, $b) {
+        usort($searchFields, function($a, $b) {
             return $a['boost'] <=> $b['boost'];
         });
 
-        $this->fields = $searchableFields;
+        $this->fields = $searchFields;
     }
 
-    public static function collect(array $fields): Fields
+    public static function collect(array $fields): ElasticsearchFields
     {
         return new static($fields);
     }

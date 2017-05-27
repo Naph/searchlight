@@ -8,7 +8,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Naph\Searchlight\SearchlightDriver;
+use Naph\Searchlight\Driver;
 
 class RebuildIndex implements ShouldQueue
 {
@@ -28,7 +28,7 @@ class RebuildIndex implements ShouldQueue
         $this->classes = $classes;
     }
 
-    public function handle(SearchlightDriver $driver, Dispatcher $dispatcher)
+    public function handle(Driver $driver, Dispatcher $dispatcher)
     {
         $driver->deleteAll();
 

@@ -7,7 +7,7 @@ use Illuminate\Bus\Dispatcher;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 use Naph\Searchlight\Jobs\RebuildIndex;
-use Naph\Searchlight\SearchlightDriver;
+use Naph\Searchlight\Driver;
 
 class IndexAll extends Command
 {
@@ -17,7 +17,7 @@ class IndexAll extends Command
 
     protected $repositories;
 
-    public function __construct(SearchlightDriver $driver)
+    public function __construct(Driver $driver)
     {
         parent::__construct();
 
