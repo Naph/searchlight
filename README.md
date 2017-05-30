@@ -1,8 +1,11 @@
 ## Searchlight
-A *Elasticsearch* search query language for **Laravel** featuring multi-model search.
+An *Elasticsearch* search query language for **Laravel** featuring multi-model search.
 ```php
-public function search(Search $search, Comment $comments, Post $posts) {
-    return $search->in($comments, $posts)->match('Searchlight')->get();
+public function search(Search $search, Comment $comments, Post $posts)
+{
+    return $search->in($comments, $posts)
+        ->match('Searchlight')
+        ->get();
 }
 ```
 ## Install
@@ -18,8 +21,7 @@ Publish vendor files containing driver and host configuration. Lumen users shoul
 ```bash
 php artisan vendor:publish --tag searchlight
 ```
-Setup models by implementing the `SearchlightContract` and `SearchlightTrait`, override `getSearchableFields`
-method. The trait binds events to saved and deleted so indices are kept updated with your database.
+Setup models by implementing the contract/trait pair and overriding `getSearchableFields`. The trait binds events to saved and deleted so indices are kept in sync with your database.
 ```php
 
 use Illuminate\Database\Eloquent\Model;
@@ -40,10 +42,11 @@ class Topic extends Model implements SearchlightContract
     }
 }
 ```
-To resync with an existing database, the models stored in `searchlight.repositories` will have their indices built using the supplied command:
+Storing this model's fully qualified classname in `searchlight.repositories` config ensures their indices are built when running:
 ```bash
 php artisan index:all
 ```
+This command destroys all existing indexed documents in the process.
 ## Requirements
 Currently only supports PHP7 and latest versions of Laravel and Lumen.
 ## License
