@@ -24,7 +24,7 @@ class ElasticsearchBuilder implements Builder
     /**
      * @var SearchlightContract[] $models
      */
-    protected $models;
+    protected $models = [];
 
     function __construct(ElasticsearchDriver $driver)
     {
@@ -141,7 +141,7 @@ class ElasticsearchBuilder implements Builder
 
         $results = $this->driver->connection->search([
             'size' => $this->driver->config['size'],
-            'index' => $model->getSearchableIndex(),
+            'index' => $model->getSearchableIndex() ?: $this->driver->config['index'],
             'type' => $model->getSearchableType(),
             'body' => $this->query()
         ]);
