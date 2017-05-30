@@ -3,11 +3,6 @@
 return [
 
     /**
-     * Max search results returned from driver.
-     */
-    'size' => 2000,
-
-    /**
      * Array of models implementing SearchlightContract as fully
      * qualified class names.
      */
@@ -41,7 +36,12 @@ return [
                     'host'   => env('ELASTICSEARCH_HOST', 'localhost'),
                     'port'   => env('ELASTICSEARCH_PORT', '9200'),
                 ]
-            ]
+            ],
+
+            /**
+             * Max search results returned from driver.
+             */
+            'size' => 2000
         ]
     ]
 ];

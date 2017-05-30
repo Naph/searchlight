@@ -28,14 +28,14 @@ trait SearchlightTrait
         return (int) $this->id;
     }
 
-    public static function bootSearchlightTrait(Dispatcher $dispatcher)
+    public static function bootSearchlightTrait()
     {
-        static::saved(function ($model) use ($dispatcher) {
-            $dispatcher->dispatch(new Index($model));
+        static::saved(function ($model) {
+            dispatch(new Index($model));
         });
 
-        static::deleted(function ($model) use ($dispatcher) {
-            $dispatcher->dispatch(new Delete($model));
+        static::deleted(function ($model) {
+            dispatch(new Delete($model));
         });
     }
 }

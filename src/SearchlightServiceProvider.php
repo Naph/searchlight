@@ -31,7 +31,7 @@ class SearchlightServiceProvider extends ServiceProvider
 
         $this->app->singleton(Driver::class, function($app) {
             $driver = $app['config']->get('searchlight.driver');
-            return new $driver['class']($app['config']->get('searchlight.index'), $driver['config']);
+            return new $driver['class']($driver['config']);
         });
     }
 

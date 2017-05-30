@@ -15,11 +15,11 @@ class ElasticsearchBuilder implements Builder
 
     protected $driver;
 
-    protected $match;
+    protected $match = [];
 
-    protected $filter;
+    protected $filter = [];
 
-    protected $range;
+    protected $range = [];
 
     /**
      * @var SearchlightContract[] $models
@@ -38,17 +38,17 @@ class ElasticsearchBuilder implements Builder
 
     public function addMatch(array $query)
     {
-        $this->match = array_merge($this->match, $query);
+        $this->match[] = $query;
     }
 
     public function addFilter(array $query)
     {
-        $this->filter = array_merge($this->filter, $query);
+        $this->filter[] = $query;
     }
 
     public function addRange(array $query)
     {
-        $this->range = array_merge($this->range, $query);
+        $this->range[] = $query;
     }
 
     private function match()
@@ -137,7 +137,7 @@ class ElasticsearchBuilder implements Builder
 
     private function singleSearch(): EloquentBuilder
     {
-        $model = array_shift($this->models);
+        $model = reset($this->models);
 
         $results = $this->driver->connection->search([
             'size' => $this->driver->config['size'],
