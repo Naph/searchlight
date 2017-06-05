@@ -18,7 +18,7 @@ abstract class Driver
 
     abstract public function builder(): Builder;
 
-    public function syntax(string $regex, $reducer)
+    public function qualifier(string $regex, $reducer)
     {
         $this->reducers[$regex] = $reducer;
     }

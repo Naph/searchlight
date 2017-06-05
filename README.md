@@ -1,5 +1,5 @@
 ## Searchlight
-An *Elasticsearch* search query language for **Laravel** featuring multi-model search.
+An *Elasticsearch* search query language for **Laravel** featuring multi-model search
 ```php
 public function search(Search $search, Comment $comments, Post $posts)
 {
@@ -7,6 +7,12 @@ public function search(Search $search, Comment $comments, Post $posts)
         ->match('Searchlight')
         ->get();
 }
+```
+and built-in qualifier reducers.
+```php
+$driver->qualifier('/#(\w+)/', function (Search $search, $fragment) {
+    $search->filter(['tags' => $fragment]);
+});
 ```
 ## Install
 Using composer
