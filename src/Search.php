@@ -41,6 +41,7 @@ class Search
             return $this;
         }
 
+        $query = $this->driver->reduce($this, $query);
         $this->builder->addMatch(compact('query', 'fields'));
 
         return $this;

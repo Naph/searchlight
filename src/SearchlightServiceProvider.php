@@ -10,13 +10,9 @@ class SearchlightServiceProvider extends ServiceProvider
 {
     protected $defer = true;
 
-    public function boot()
+    public function boot(Driver $driver)
     {
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                IndexAll::class,
-            ]);
-        }
+        //
     }
 
     public function register()
@@ -33,6 +29,12 @@ class SearchlightServiceProvider extends ServiceProvider
             $driver = $app['config']->get('searchlight.driver');
             return new $driver['class']($driver['config']);
         });
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                IndexAll::class,
+            ]);
+        }
     }
 
     public function provides()

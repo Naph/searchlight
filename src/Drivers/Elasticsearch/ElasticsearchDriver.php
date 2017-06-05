@@ -9,7 +9,7 @@ use Naph\Searchlight\Driver;
 use Naph\Searchlight\Exceptions\SearchlightException;
 use Naph\Searchlight\Model\SearchlightContract;
 
-class ElasticsearchDriver implements Driver
+class ElasticsearchDriver extends Driver
 {
     public $config;
 

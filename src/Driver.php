@@ -4,15 +4,37 @@ namespace Naph\Searchlight;
 
 use Naph\Searchlight\Model\SearchlightContract;
 
-interface Driver
+abstract class Driver
 {
-    public function __construct(array $config);
+    protected $reducers = [];
 
-    public function index(SearchlightContract $model);
+    abstract public function __construct(array $config);
 
-    public function delete(SearchlightContract $model);
+    abstract public function index(SearchlightContract $model);
 
-    public function deleteAll(string $index = '');
+    abstract public function delete(SearchlightContract $model);
 
-    public function builder(): Builder;
+    abstract public function deleteAll(string $index = '');
+
+    abstract public function builder(): Builder;
+
+    public function syntax(string $regex, $reducer)
+    {
+        $this->reducers[$regex] = $reducer;
+    }
+
+    public function reduce(Search $search, $query)
+    {
+        foreach ($this->reducers as $regex => $reducer) {
+            $query = preg_replace_callback($regex, function ($matches) use ($search, $reducer) {
+                if ($reducer instanceof \Closure) {
+                    $reducer($search, $matches[1]);
+                } elseif (is_array($reducer)) {
+                    call_user_func_array([$reducer[0], $reducer[1]], [$search, $matches[1]]);
+                }
+            }, $query);
+        }
+
+        return $query;
+    }
 }

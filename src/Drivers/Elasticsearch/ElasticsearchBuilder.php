@@ -36,19 +36,19 @@ class ElasticsearchBuilder implements Builder
         $this->models[] = $model;
     }
 
-    public function addMatch(array $query)
+    public function addMatch(array $match)
     {
-        $this->match[] = $query;
+        $this->match[] = $match;
     }
 
-    public function addFilter(array $query)
+    public function addFilter(array $filter)
     {
-        $this->filter[] = $query;
+        $this->filter = array_merge($this->filter, $filter);
     }
 
     public function addRange(array $query)
     {
-        $this->range[] = $query;
+        $this->range = array_merge($this->range, $query);
     }
 
     private function match()
