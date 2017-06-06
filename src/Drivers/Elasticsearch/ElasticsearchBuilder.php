@@ -57,6 +57,10 @@ class ElasticsearchBuilder implements Builder
         $must = [];
 
         foreach ($this->match as $matchQuery) {
+            if (empty($matchQuery['query'])) {
+                continue;
+            }
+
             $fields = [];
 
             if (is_null($matchQuery['fields']) && count($this->models) === 1) {
