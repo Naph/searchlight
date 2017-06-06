@@ -18,6 +18,8 @@ interface Builder
 
     public function addRange(array $query);
 
+    public function isEmpty(): bool;
+
     public function build(): EloquentBuilder;
 
     public function get(): Collection;

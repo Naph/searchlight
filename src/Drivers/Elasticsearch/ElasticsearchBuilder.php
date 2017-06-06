@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Naph\Searchlight\Builder;
 use Naph\Searchlight\Drivers\Elasticsearch\ElasticsearchFields as Fields;
+use Naph\Searchlight\Exceptions\SearchlightException;
 use Naph\Searchlight\Model\SearchlightContract;
 
 class ElasticsearchBuilder implements Builder
@@ -59,7 +60,11 @@ class ElasticsearchBuilder implements Builder
             $fields = [];
 
             if (is_null($matchQuery['fields']) && count($this->models) === 1) {
-                $fields = Fields::collect($this->models[0]->getSearchableFields());
+                try {
+                    $fields = Fields::collect($this->models[0]->getSearchableFields());
+                } catch (SearchlightException $e) {
+                    throw new SearchlightException(sprintf('(%s): %s', get_class($this->models[0]), $e->getMessage()));
+                }
             } elseif (is_array($matchQuery['fields'])) {
                 $fields = Fields::collect($matchQuery['fields']);
             } elseif (is_string($matchQuery['fields'])) {
@@ -119,6 +124,13 @@ class ElasticsearchBuilder implements Builder
         ];
     }
 
+    public function isEmpty(): bool
+    {
+        return empty($this->match)
+            && empty($this->filter)
+            && empty($this->range);
+    }
+
     public function build(): EloquentBuilder
     {
         if (count($this->models) > 1) {
@@ -163,10 +175,7 @@ class ElasticsearchBuilder implements Builder
 
         foreach ($this->models as $model) {
             $contracts[$model->getSearchableType()] = $model;
-            $searchFields = $model->getSearchableFields();
-            arsort($searchFields);
-            $searchField = array_shift($searchFields);
-            $fields[] = array_keys($searchField)[0].'^5';
+            $fields = array_unique(array_merge($fields, $model->getSearchableFields()));
         }
 
         $query = [];
@@ -180,11 +189,11 @@ class ElasticsearchBuilder implements Builder
         }
 
         $searchResults = $this->driver->connection->search([
-            'size' => 100,
+            'size' => $this->driver->config['size'],
             'index' => '_all',
             'type' => array_keys($contracts),
             'body' => [
-                'query' => Fields::collect(array_merge($fields, '_all'))->queryArray($query)
+                'query' => Fields::collect($fields)->queryArray($query)
             ]
         ]);
         $hits = collect($searchResults['hits']['hits']);

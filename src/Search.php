@@ -4,6 +4,7 @@ namespace Naph\Searchlight;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Support\Collection;
+use Naph\Searchlight\Exceptions\SearchlightException;
 use Naph\Searchlight\Model\SearchlightContract;
 
 class Search
@@ -18,9 +19,15 @@ class Search
         $this->builder = $driver->builder();
     }
 
-    public function in(SearchlightContract ...$models): Search
+    public function in(...$models): Search
     {
         foreach ($models as $model) {
+            if (! $model instanceof SearchlightContract) {
+                throw new SearchlightException(
+                    sprintf('Argument passed to %s (%s) must implement interface %s', self::class, get_class($model), SearchlightContract::class)
+                );
+            }
+
             $this->builder->addModel($model);
         }
 
@@ -95,7 +102,7 @@ class Search
                 unset($range[$key]);
             }
 
-            if (! array_search($array[1], Builder::RANGE_OPERATORS)) {
+            if (! in_array($array[1], Builder::RANGE_OPERATORS)) {
                 throw new \UnexpectedValueException("Range operator is not recognised: `{$array[1]}`");
             }
         }
@@ -103,6 +110,11 @@ class Search
         $this->builder->addRange($range);
 
         return $this;
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->builder->isEmpty();
     }
 
     public function builder(): EloquentBuilder
@@ -113,5 +125,21 @@ class Search
     public function get(): Collection
     {
         return $this->builder->get();
+    }
+
+    public function completion(): Collection
+    {
+        return collect($this->get())->map(function(SearchlightContract $model) {
+            try {
+                return $model->{(new Fields($model->getSearchableFields()))->first()};
+            } catch (SearchlightException $e) {
+                throw new SearchlightException(sprintf('(%s): %s', get_class($model), $e->getMessage()));
+            }
+        });
+    }
+
+    public function newInstance(): Search
+    {
+        return new static($this->driver);
     }
 }
