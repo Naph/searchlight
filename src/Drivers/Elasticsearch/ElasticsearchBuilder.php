@@ -44,12 +44,12 @@ class ElasticsearchBuilder implements Builder
 
     public function addFilter(array $filter)
     {
-        $this->filter = array_merge($this->filter, $filter);
+        $this->filter = array_merge_recursive($this->filter, $filter);
     }
 
     public function addRange(array $query)
     {
-        $this->range = array_merge($this->range, $query);
+        $this->range = array_merge_recursive($this->range, $query);
     }
 
     private function match()
@@ -57,10 +57,6 @@ class ElasticsearchBuilder implements Builder
         $must = [];
 
         foreach ($this->match as $matchQuery) {
-            if (empty($matchQuery['query'])) {
-                continue;
-            }
-
             $fields = [];
 
             if (is_null($matchQuery['fields']) && count($this->models) === 1) {
@@ -76,8 +72,16 @@ class ElasticsearchBuilder implements Builder
             }
 
             if (is_string($matchQuery['query'])) {
+                if (! trim($matchQuery['query'])) {
+                    continue;
+                }
+
                 $must[] = $fields->queryString($matchQuery['query']);
             } elseif (is_array($matchQuery['query'])) {
+                if (empty($matchQuery['query'])) {
+                    continue;
+                }
+
                 $must[] = $fields->queryArray($matchQuery['query']);
             }
         }
@@ -182,24 +186,17 @@ class ElasticsearchBuilder implements Builder
             $fields = array_unique(array_merge($fields, $model->getSearchableFields()));
         }
 
-        $query = [];
-
-        foreach ($this->match as $matchQuery) {
-            if (is_string($matchQuery['query'])) {
-                $query = array_merge($query, [$matchQuery['query']]);
-            } elseif (is_array($matchQuery['query'])) {
-                $query = array_merge($query, $matchQuery['query']);
-            }
+        foreach ($this->match as $key => $match) {
+            $this->match[$key]['fields'] = $fields;
         }
 
         $searchResults = $this->driver->connection->search([
-            'size' => $this->driver->config['size'],
+            'size' => 500,
             'index' => '_all',
             'type' => array_keys($contracts),
-            'body' => [
-                'query' => Fields::collect($fields)->queryArray($query)
-            ]
+            'body' => $this->query()
         ]);
+
         $hits = collect($searchResults['hits']['hits']);
         $types = $hits->pluck('_type')->unique();
 
@@ -211,7 +208,11 @@ class ElasticsearchBuilder implements Builder
                 ->get();
 
             foreach ($typeResults as $pos => $typeResult) {
-                $hits->put($pos, $modelQuery->where('id', $typeResult['_id'])->first());
+                if ($result = $modelQuery->where('id', $typeResult['_id'])->first()) {
+                    $hits->put($pos, $result);
+                } else {
+                    $hits->forget($pos);
+                }
             }
         }
 
