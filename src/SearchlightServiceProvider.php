@@ -10,11 +10,6 @@ class SearchlightServiceProvider extends ServiceProvider
 {
     protected $defer = true;
 
-    public function boot(Driver $driver)
-    {
-        //
-    }
-
     public function register()
     {
         $this->publishes([

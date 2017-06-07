@@ -20,10 +20,6 @@ class ElasticsearchDriver extends Driver
         $this->config = $config;
         $this->connection = ClientBuilder::create()->setHosts($config['hosts'])->build();
 
-        if (! $this->connection->info()) {
-            throw new SearchlightException('Elasticsearch host could not be resolved.');
-        }
-
         if (! $this->config['index']) {
             throw new SearchlightException('Searchlight Exception: default index cannot be empty.');
         }
