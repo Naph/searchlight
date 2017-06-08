@@ -20,7 +20,11 @@ interface Builder
 
     public function isEmpty(): bool;
 
+    public function withTrashed();
+
     public function build(): EloquentBuilder;
 
     public function get(): Collection;
+
+    public function completion(): Collection;
 }

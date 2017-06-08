@@ -117,6 +117,13 @@ class Search
         return $this->builder->isEmpty();
     }
 
+    public function withTrashed()
+    {
+        $this->builder->withTrashed();
+
+        return $this;
+    }
+
     public function builder(): EloquentBuilder
     {
         return $this->builder->build();
@@ -129,7 +136,7 @@ class Search
 
     public function completion(): Collection
     {
-        return collect($this->get())->map(function(SearchlightContract $model) {
+        return collect($this->builder->completion())->map(function(SearchlightContract $model) {
             try {
                 return $model->{(new Fields($model->getSearchableFields()))->first()};
             } catch (SearchlightException $e) {

@@ -4,6 +4,7 @@ namespace Naph\Searchlight\Drivers\Elasticsearch;
 
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\Missing404Exception;
+use Illuminate\Support\Facades\Config;
 use Naph\Searchlight\Builder;
 use Naph\Searchlight\Driver;
 use Naph\Searchlight\Exceptions\SearchlightException;
@@ -27,53 +28,74 @@ class ElasticsearchDriver extends Driver
 
     public function index(SearchlightContract $model)
     {
-        $body = $model->getSearchableBody();
-
-        foreach ($body as $key => $value) {
-            if (is_bool($value)) {
-                $body[$key] = (int) $value;
-            }
-        }
-
-        $this->connection->index([
-            'index' => $model->getSearchableIndex() ?: $this->config['index'],
+        $document = [
+            'index' => method_exists($model, 'trashed') && $model->trashed()
+                ? $model->getSearchableTrashedIndex()
+                : $model->getSearchableIndex(),
             'type' => $model->getSearchableType(),
             'id' => $model->getSearchableId(),
-            'body' => $body
-        ]);
+            'body' => $model->getSearchableBody()
+        ];
+
+        $this->connection->index($document);
     }
 
     public function delete(SearchlightContract $model)
     {
+        if (method_exists($model, 'trashed') && $model->trashed()) {
+            $this->connection->reindex([
+                'source' => [
+                    'index' => $model->getSearchableIndex(),
+                    'type' => $model->getSearchableType(),
+                    'id' => $model->getSearchableId(),
+                ],
+                'dest' => [
+                    'index' => $model->getSearchableTrashedIndex()
+                ]
+            ]);
+        }
+
         try {
-            $this->deleteDocument(
-                $model->getSearchableIndex() ?: $this->config['index'],
-                $model->getSearchableType(),
-                $model->getSearchableId()
-            );
+            $this->connection->delete([
+                'index' => $model->getSearchableIndex(),
+                'type' => $model->getSearchableType(),
+                'id' => $model->getSearchableId(),
+            ]);
         } catch (Missing404Exception $exception) {
             // Delete if exists
         }
     }
 
-    public function deleteAll(string $index = '')
+    public function restore(SearchlightContract $model)
     {
-        if (! $index) {
-            $index = $this->config['index'];
-        }
+        $this->index($model);
 
-        if ($this->connection->indices()->exists(compact('index'))) {
-            $this->connection->indices()->delete(compact('index'));
+        try {
+            $this->connection->delete([
+                'index' => $model->getSearchableTrashedIndex(),
+                'type' => $model->getSearchableType(),
+                'id' => $model->getSearchableId(),
+            ]);
+        } catch (Missing404Exception $exception) {
+            // Delete if exists
         }
     }
 
-    protected function deleteDocument($index, $type, $id)
+    public function deleteAll()
     {
-        $this->connection->delete([
-            'index' => $index,
-            'type' => $type,
-            'id' => $id
-        ]);
+        $indices = [];
+
+        foreach (Config::get('searchlight.repositories') as $repository) {
+            $index = (new $repository())->getSearchableIndex();
+            $indices[] = $index;
+            $indices[] = $index.'_trashed';
+        }
+
+        foreach (array_unique($indices) as $index) {
+            if ($this->connection->indices()->exists(compact('index'))) {
+                $this->connection->indices()->delete(compact('index'));
+            }
+        }
     }
 
     public function builder(): Builder

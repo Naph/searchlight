@@ -22,6 +22,10 @@ class ElasticsearchBuilder implements Builder
 
     protected $range = [];
 
+    protected $searchPrefix = false;
+
+    protected $withTrashed = false;
+
     /**
      * @var SearchlightContract[] $models
      */
@@ -76,13 +80,13 @@ class ElasticsearchBuilder implements Builder
                     continue;
                 }
 
-                $must[] = $fields->queryString($matchQuery['query']);
+                $must[] = $fields->queryString($matchQuery['query'], $this->searchPrefix);
             } elseif (is_array($matchQuery['query'])) {
                 if (empty($matchQuery['query'])) {
                     continue;
                 }
 
-                $must[] = $fields->queryArray($matchQuery['query']);
+                $must[] = $fields->queryArray($matchQuery['query'], $this->searchPrefix);
             }
         }
 
@@ -132,6 +136,11 @@ class ElasticsearchBuilder implements Builder
         ];
     }
 
+    public function withTrashed()
+    {
+        $this->withTrashed = true;
+    }
+
     public function isEmpty(): bool
     {
         return empty($this->match)
@@ -155,13 +164,25 @@ class ElasticsearchBuilder implements Builder
             : $this->build()->get();
     }
 
+    public function completion(): Collection
+    {
+        $this->searchPrefix = true;
+
+        return $this->get();
+    }
+
     private function singleSearch(): EloquentBuilder
     {
-        $model = reset($this->models);
+        $model = $this->models[0];
+        $indices = [$model->getSearchableIndex()];
+
+        if ($this->withTrashed) {
+            $indices[] = $model->getSearchableTrashedIndex();
+        }
 
         $results = $this->driver->connection->search([
             'size' => $this->driver->config['size'],
-            'index' => $model->getSearchableIndex() ?: $this->driver->config['index'],
+            'index' => $indices,
             'type' => $model->getSearchableType(),
             'body' => $this->query()
         ]);
@@ -173,6 +194,10 @@ class ElasticsearchBuilder implements Builder
             $searchQuery->orderBy(DB::raw('FIELD(id, '.implode(',', $documentIds).')'), 'ASC');
         }
 
+        if ($this->withTrashed) {
+            $searchQuery->withTrashed();
+        }
+
         return $searchQuery;
     }
 
@@ -180,10 +205,16 @@ class ElasticsearchBuilder implements Builder
     {
         $contracts = [];
         $fields = [];
+        $indices = [];
 
         foreach ($this->models as $model) {
             $contracts[$model->getSearchableType()] = $model;
             $fields = array_unique(array_merge($fields, $model->getSearchableFields()));
+            $indices = array_unique(array_merge($indices, $model->getSearchableIndex()));
+
+            if ($this->withTrashed) {
+                $indices = array_unique(array_merge($indices, $model->getSearchableTrashedIndex()));
+            }
         }
 
         foreach ($this->match as $key => $match) {
@@ -192,7 +223,7 @@ class ElasticsearchBuilder implements Builder
 
         $searchResults = $this->driver->connection->search([
             'size' => 500,
-            'index' => '_all',
+            'index' => $indices,
             'type' => array_keys($contracts),
             'body' => $this->query()
         ]);
@@ -204,11 +235,16 @@ class ElasticsearchBuilder implements Builder
             $typeResults = $hits->where('_type', $type);
             $typeIds = $typeResults->pluck('_id')->toArray();
             $modelQuery = $contracts[$type]->whereIn('id', $typeIds)
-                ->orderBy(DB::raw('FIELD(id, '.implode(',', $typeIds).')'), 'ASC')
-                ->get();
+                ->orderBy(DB::raw('FIELD(id, '.implode(',', $typeIds).')'), 'ASC');
+
+            if ($this->withTrashed) {
+                $modelQuery->withTrashed();
+            }
+
+            $models = $modelQuery->get();
 
             foreach ($typeResults as $pos => $typeResult) {
-                if ($result = $modelQuery->where('id', $typeResult['_id'])->first()) {
+                if ($result = $models->where('id', $typeResult['_id'])->first()) {
                     $hits->put($pos, $result);
                 } else {
                     $hits->forget($pos);

@@ -27,7 +27,7 @@ class BuildIndex implements ShouldQueue
         set_time_limit(0);
 
         // Loop through and push each model to the index
-        $this->class->chunk(1000, function ($models) use ($driver, $dispatcher) {
+        $this->class->withTrashed()->chunk(1000, function ($models) use ($driver, $dispatcher) {
             foreach ($models as $model) {
                 $dispatcher->dispatch(new Index($model));
             }

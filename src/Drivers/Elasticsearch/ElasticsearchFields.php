@@ -23,26 +23,27 @@ class ElasticsearchFields extends Fields
         return $boostedFields;
     }
 
-    public function queryString(string $query)
+    public function queryString(string $query, $prefix = false)
     {
         $match = [
             'fields' => $this->getBoostedFields(),
             'query' => $query,
-            'type' => 'most_fields',
-            'lenient' => true
+            'type' => $prefix ? 'phrase_prefix' : 'most_fields',
+            'lenient' => true,
         ];
 
         return ['multi_match' => $match];
     }
 
-    public function queryArray(array $query, $glue = ' + ')
+    public function queryArray(array $query, $prefix = false)
     {
-        $query = implode($glue, array_map(function ($string) {
+        $query = implode(' + ', array_map(function ($string) {
             return "\"$string\"";
         }, $query));
         $match = [
             'fields' => $this->getBoostedFields(),
             'query' => $query,
+            'type' => $prefix ? 'phrase_prefix' : 'most_fields',
             'lenient' => true
         ];
 

@@ -2,15 +2,21 @@
 
 namespace Naph\Searchlight\Model;
 
-use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Support\Facades\Config;
 use Naph\Searchlight\Jobs\Delete;
 use Naph\Searchlight\Jobs\Index;
+use Naph\Searchlight\Jobs\Restore;
 
 trait SearchlightTrait
 {
     public function getSearchableIndex(): string
     {
-        return '';
+        return Config::get('searchlight.index');
+    }
+
+    public function getSearchableTrashedIndex(): string
+    {
+        return Config::get('searchlight.index').'_trashed';
     }
 
     public function getSearchableType(): string
@@ -36,6 +42,10 @@ trait SearchlightTrait
 
         static::deleted(function ($model) {
             dispatch(new Delete($model));
+        });
+
+        static::restored(function ($model) {
+            dispatch(new Restore($model));
         });
     }
 }
