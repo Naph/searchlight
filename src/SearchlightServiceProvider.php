@@ -4,13 +4,7 @@ declare(strict_types=1);
 namespace Naph\Searchlight;
 
 use Illuminate\Support\ServiceProvider;
-use Naph\Searchlight\Commands\{
-    Flush,
-    FlushAll,
-    Import,
-    ImportAll,
-    Rebuild
-};
+use Naph\Searchlight\Commands;
 
 class SearchlightServiceProvider extends ServiceProvider
 {
@@ -37,11 +31,11 @@ class SearchlightServiceProvider extends ServiceProvider
         // Register console commands in running in consoles
         if ($this->app->runningInConsole()) {
             $this->commands([
-                Flush::class,
-                FlushAll::class,
-                Import::class,
-                ImportAll::class,
-                Rebuild::class
+                Commands\Flush::class,
+                Commands\FlushAll::class,
+                Commands\Import::class,
+                Commands\ImportAll::class,
+                Commands\Rebuild::class
             ]);
 
             // @TODO `config_path` is defined in `Illuminate\Foundation` which  is not imported via this package
