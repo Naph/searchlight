@@ -33,8 +33,8 @@ class SearchlightServiceProvider extends ServiceProvider
             $this->commands([
                 Commands\Flush::class,
                 Commands\FlushAll::class,
-                Commands\Import::class,
-                Commands\ImportAll::class,
+                Commands\Index::class,
+                Commands\IndexAll::class,
                 Commands\Rebuild::class
             ]);
 

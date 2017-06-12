@@ -5,23 +5,24 @@ namespace Naph\Searchlight\Commands;
 
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use Naph\Searchlight\Jobs\BuildIndex;
 
-class Import extends Command
+class IndexAll extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'searchlight:import {model}';
+    protected $signature = 'searchlight:index-all';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Import a searchlight index';
+    protected $description = 'Import all searchlight indexes';
 
     /**
      * Handle the command
@@ -31,10 +32,12 @@ class Import extends Command
      */
     public function handle(Dispatcher $dispatcher)
     {
-        $model = $this->argument('model');
-        $dispatcher->dispatch(
-            new BuildIndex($model)
-        );
-        $this->info("Searchlight index for $model has been imported.");
+        $repositories = Config::get('searchlight.repositories');
+        foreach ($repositories as $repository) {
+            $dispatcher->dispatch(
+                new BuildIndex($repository)
+            );
+        }
+        $this->info('All searchlight indexes have been imported.');
     }
 }
