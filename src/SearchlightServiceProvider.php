@@ -38,9 +38,8 @@ class SearchlightServiceProvider extends ServiceProvider
                 Commands\Rebuild::class
             ]);
 
-            // @TODO `config_path` is defined in `Illuminate\Foundation` which  is not imported via this package
             $this->publishes([
-                __DIR__.'/../config/searchlight.php' => config_path('searchlight.php')
+                __DIR__.'/../config/searchlight.php' => $this->app->make('path.config').'/searchlight.php'
             ], 'searchlight');
         }
     }
