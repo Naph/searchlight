@@ -33,7 +33,7 @@ class Index extends Command
     {
         $model = $this->argument('model');
         $dispatcher->dispatch(
-            new BuildIndex($model)
+            new BuildIndex($this->laravel->make($model))
         );
         $this->info("Searchlight index for $model has been imported.");
     }

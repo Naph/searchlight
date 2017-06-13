@@ -4,7 +4,6 @@ namespace Naph\Searchlight\Drivers\Elasticsearch;
 
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\Missing404Exception;
-use Illuminate\Support\Facades\Config;
 use Naph\Searchlight\Builder;
 use Naph\Searchlight\Driver;
 use Naph\Searchlight\Exceptions\SearchlightException;
@@ -12,13 +11,12 @@ use Naph\Searchlight\Model\SearchlightContract;
 
 class ElasticsearchDriver extends Driver
 {
-    public $config;
-
     public $connection;
 
-    public function __construct(array $config)
+    public function __construct(array $repositories, array $config)
     {
-        $this->config = $config;
+        parent::__construct($repositories, $config);
+
         $this->connection = ClientBuilder::create()->setHosts($config['hosts'])->build();
 
         if (! $this->config['index']) {
@@ -26,16 +24,21 @@ class ElasticsearchDriver extends Driver
         }
     }
 
-    public function index(SearchlightContract $model)
+    public function getModelQuery(SearchlightContract $model, $trashed = false): array
     {
-        $document = [
-            'index' => method_exists($model, 'trashed') && $model->trashed()
-                ? $model->getSearchableTrashedIndex()
-                : $model->getSearchableIndex(),
+        return [
+            'index' => ($model->getSearchableIndex() ?: $this->config['index']).($trashed ? '_trashed' : ''),
             'type' => $model->getSearchableType(),
             'id' => $model->getSearchableId(),
-            'body' => $model->getSearchableBody()
         ];
+    }
+
+    public function index(SearchlightContract $model)
+    {
+        $document = array_merge(
+            $this->getModelQuery($model, method_exists($model, 'trashed') && $model->trashed()),
+            ['body' => $model->getSearchableBody()]
+        );
 
         $this->connection->index($document);
     }
@@ -44,23 +47,13 @@ class ElasticsearchDriver extends Driver
     {
         if (method_exists($model, 'trashed') && $model->trashed()) {
             $this->connection->reindex([
-                'source' => [
-                    'index' => $model->getSearchableIndex(),
-                    'type' => $model->getSearchableType(),
-                    'id' => $model->getSearchableId(),
-                ],
-                'dest' => [
-                    'index' => $model->getSearchableTrashedIndex()
-                ]
+                'source' => $this->getModelQuery($model),
+                'dest' => $this->getModelQuery($model, true)
             ]);
         }
 
         try {
-            $this->connection->delete([
-                'index' => $model->getSearchableIndex(),
-                'type' => $model->getSearchableType(),
-                'id' => $model->getSearchableId(),
-            ]);
+            $this->connection->delete($this->getModelQuery($model));
         } catch (Missing404Exception $exception) {
             // Delete if exists
         }
@@ -71,11 +64,7 @@ class ElasticsearchDriver extends Driver
         $this->index($model);
 
         try {
-            $this->connection->delete([
-                'index' => $model->getSearchableTrashedIndex(),
-                'type' => $model->getSearchableType(),
-                'id' => $model->getSearchableId(),
-            ]);
+            $this->connection->delete($this->getModelQuery($model, true));
         } catch (Missing404Exception $exception) {
             // Delete if exists
         }
@@ -85,10 +74,10 @@ class ElasticsearchDriver extends Driver
     {
         $indices = [];
 
-        foreach (Config::get('searchlight.repositories') as $repository) {
-            $index = (new $repository())->getSearchableIndex();
-            $indices[] = $index;
-            $indices[] = $index.'_trashed';
+        foreach ($this->repositories as $repository) {
+            $model = new $repository();
+            $indices[] = $this->getModelQuery($model)['index'];
+            $indices[] = $this->getModelQuery($model, true)['index'];
         }
 
         foreach (array_unique($indices) as $index) {

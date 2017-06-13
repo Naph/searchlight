@@ -25,10 +25,12 @@ class SearchlightServiceProvider extends ServiceProvider
         $this->app->singleton(Driver::class, function($app) {
             $config = $app['config']->get('searchlight');
             $driver = $config['drivers'][$config['driver']];
-            return new $driver['class']($driver);
+            $repositories = $config['repositories'];
+
+            return new $driver['class']($driver, $repositories);
         });
 
-        // Register console commands in running in consoles
+        // Register commands when running in console
         if ($this->app->runningInConsole()) {
             $this->commands([
                 Commands\Flush::class,

@@ -7,8 +7,8 @@ use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\App;
 use Naph\Searchlight\Driver;
+use Naph\Searchlight\Model\SearchlightContract;
 
 class BuildIndex implements ShouldQueue
 {
@@ -17,9 +17,9 @@ class BuildIndex implements ShouldQueue
 
     protected $repository;
 
-    public function __construct(string $repository)
+    public function __construct(SearchlightContract $repository)
     {
-        $this->repository = App::make($repository);
+        $this->repository = $repository;
     }
 
     public function handle(Driver $driver, Dispatcher $dispatcher)

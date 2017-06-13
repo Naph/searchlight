@@ -5,7 +5,6 @@ namespace Naph\Searchlight\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Support\Facades\App;
 use Naph\Searchlight\Jobs\Delete;
 
 class Flush extends Command
@@ -34,7 +33,7 @@ class Flush extends Command
     {
         $model = $this->argument('model');
         $dispatcher->dispatch(
-            new Delete(App::make($model))
+            new Delete($this->laravel->make($model))
         );
         $this->info("Searchlight index for $model has been flushed.");
     }

@@ -8,8 +8,6 @@ interface SearchlightContract
 
     public function getSearchableIndex(): string;
 
-    public function getSearchableTrashedIndex(): string;
-
     public function getSearchableType(): string;
 
     public function getSearchableBody(): array;

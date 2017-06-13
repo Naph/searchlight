@@ -11,12 +11,6 @@ return [
     'driver' => 'elasticsearch',
 
     /**
-     * Default index name used for all documents. Name can be changed by
-     * getSearchableIndex() per model implementing SearchlightContract.
-     */
-    'index' => 'searchlight',
-
-    /**
      * Drivers
      */
     'drivers' => [
@@ -24,15 +18,21 @@ return [
             'class' => Naph\Searchlight\Drivers\Elasticsearch\ElasticsearchDriver::class,
 
             /**
+             * Default index name used for all documents. Name can be changed by
+             * getSearchableIndex() per model implementing SearchlightContract.
+             */
+            'index' => 'searchlight',
+
+            /**
              * Host configuration. Default is localhost
              */
             'hosts' => [
                 [
-                    'scheme' => env('ELASTICSEARCH_SCHEME', 'http'),
-                    'user'   => env('ELASTICSEARCH_USER'),
-                    'pass'   => env('ELASTICSEARCH_PASS'),
-                    'host'   => env('ELASTICSEARCH_HOST', 'localhost'),
-                    'port'   => env('ELASTICSEARCH_PORT', '9200'),
+                    'scheme' => getenv('ELASTICSEARCH_SCHEME') ?? 'http',
+                    'user'   => getenv('ELASTICSEARCH_USER'),
+                    'pass'   => getenv('ELASTICSEARCH_PASS'),
+                    'host'   => getenv('ELASTICSEARCH_HOST') ?? 'localhost',
+                    'port'   => getenv('ELASTICSEARCH_PORT') ?? '9200',
                 ]
             ],
 

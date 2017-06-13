@@ -4,7 +4,6 @@ namespace Naph\Searchlight\Drivers\Elasticsearch;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Naph\Searchlight\Builder;
 use Naph\Searchlight\Drivers\Elasticsearch\ElasticsearchFields as Fields;
 use Naph\Searchlight\Exceptions\SearchlightException;
@@ -174,10 +173,10 @@ class ElasticsearchBuilder implements Builder
     private function singleSearch(): EloquentBuilder
     {
         $model = $this->models[0];
-        $indices = [$model->getSearchableIndex()];
+        $indices = [$this->driver->getModelQuery($model)['index']];
 
         if ($this->withTrashed) {
-            $indices[] = $model->getSearchableTrashedIndex();
+            $indices[] = $this->driver->getModelQuery($model, true)['index'];
         }
 
         $results = $this->driver->connection->search([
@@ -191,7 +190,7 @@ class ElasticsearchBuilder implements Builder
         $searchQuery = $model->whereIn($model->getKeyName(), $documentIds);
 
         if ($documentIds) {
-            $searchQuery->orderBy(DB::raw('FIELD(id, '.implode(',', $documentIds).')'), 'ASC');
+            $searchQuery->orderByRaw('FIELD(id, '.implode(',', $documentIds).')', 'ASC');
         }
 
         if ($this->withTrashed) {
@@ -210,10 +209,10 @@ class ElasticsearchBuilder implements Builder
         foreach ($this->models as $model) {
             $contracts[$model->getSearchableType()] = $model;
             $fields = array_unique(array_merge($fields, $model->getSearchableFields()));
-            $indices = array_unique(array_merge($indices, $model->getSearchableIndex()));
+            $indices = array_unique(array_merge($indices, $this->driver->getModelQuery($model)['index']));
 
             if ($this->withTrashed) {
-                $indices = array_unique(array_merge($indices, $model->getSearchableTrashedIndex()));
+                $indices = array_unique(array_merge($indices, $this->driver->getModelQuery($model, true)['index']));
             }
         }
 
@@ -235,7 +234,7 @@ class ElasticsearchBuilder implements Builder
             $typeResults = $hits->where('_type', $type);
             $typeIds = $typeResults->pluck('_id')->toArray();
             $modelQuery = $contracts[$type]->whereIn('id', $typeIds)
-                ->orderBy(DB::raw('FIELD(id, '.implode(',', $typeIds).')'), 'ASC');
+                ->orderByRaw('FIELD(id, '.implode(',', $typeIds).')', 'ASC');
 
             if ($this->withTrashed) {
                 $modelQuery->withTrashed();

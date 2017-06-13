@@ -6,9 +6,27 @@ use Naph\Searchlight\Model\SearchlightContract;
 
 abstract class Driver
 {
-    protected $reducers = [];
+    protected $config;
 
-    abstract public function __construct(array $config);
+    protected $reducers;
+
+    protected $repositories;
+
+    public function __construct(array $repositories, array $config) {
+        $this->config = $config;
+        $this->reducers = [];
+        $this->repositories = $repositories;
+    }
+
+    public function getConfig($key)
+    {
+        return $this->config[$key];
+    }
+
+    public function getRepositories(): array
+    {
+        return $this->repositories;
+    }
 
     abstract public function index(SearchlightContract $model);
 

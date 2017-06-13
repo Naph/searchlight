@@ -5,7 +5,7 @@ namespace Naph\Searchlight\Commands;
 
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Config;
+use Naph\Searchlight\Driver;
 use Naph\Searchlight\Jobs\BuildIndex;
 
 class IndexAll extends Command
@@ -28,16 +28,17 @@ class IndexAll extends Command
      * Handle the command
      *
      * @param Dispatcher $dispatcher
+     * @param Driver $driver
      * @return void
      */
-    public function handle(Dispatcher $dispatcher)
+    public function handle(Dispatcher $dispatcher, Driver $driver)
     {
-        $repositories = Config::get('searchlight.repositories');
-        foreach ($repositories as $repository) {
+        foreach ($driver->getRepositories() as $repository) {
             $dispatcher->dispatch(
-                new BuildIndex($repository)
+                new BuildIndex($this->laravel->make($repository))
             );
         }
+
         $this->info('All searchlight indexes have been imported.');
     }
 }
