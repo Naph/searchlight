@@ -31,6 +31,6 @@ class Rebuild extends Command
     public function handle(Dispatcher $dispatcher)
     {
         $this->call('searchlight:flush-all');
-        $this->call('searchlight:import-all');
+        $this->call('searchlight:index-all');
     }
 }
