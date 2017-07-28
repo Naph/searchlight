@@ -27,7 +27,7 @@ class SearchlightServiceProvider extends ServiceProvider
             $driver = $config['drivers'][$config['driver']];
             $repositories = $config['repositories'];
 
-            return new $driver['class']($driver, $repositories);
+            return new $driver['class']($repositories, $driver);
         });
 
         // Register commands when running in console
