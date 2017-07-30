@@ -27,4 +27,12 @@ interface Builder
     public function get(): Collection;
 
     public function completion(): Collection;
+
+    /**
+     * Set the result set size
+     *
+     * @param int $size
+     * @return static
+     */
+    public function size(int $size);
 }

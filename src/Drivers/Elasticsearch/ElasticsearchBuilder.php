@@ -23,6 +23,8 @@ class ElasticsearchBuilder implements Builder
 
     protected $searchPrefix = false;
 
+    protected $size = null;
+
     protected $withTrashed = false;
 
     /**
@@ -170,6 +172,13 @@ class ElasticsearchBuilder implements Builder
         return $this->get();
     }
 
+    public function size(int $size)
+    {
+        $this->size = $size;
+
+        return $this;
+    }
+
     private function singleSearch(): EloquentBuilder
     {
         $model = $this->models[0];
@@ -180,7 +189,7 @@ class ElasticsearchBuilder implements Builder
         }
 
         $results = $this->driver->connection->search([
-            'size' => $this->driver->config['size'],
+            'size' => $this->size ?: $this->driver->getConfig('size'),
             'index' => $indices,
             'type' => $model->getSearchableType(),
             'body' => $this->query()
@@ -221,7 +230,7 @@ class ElasticsearchBuilder implements Builder
         }
 
         $searchResults = $this->driver->connection->search([
-            'size' => 500,
+            'size' => $this->size ?: $this->driver->getConfig('size'),
             'index' => $indices,
             'type' => array_keys($contracts),
             'body' => $this->query()
