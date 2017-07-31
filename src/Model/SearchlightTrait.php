@@ -39,8 +39,10 @@ trait SearchlightTrait
             self::$dispatcher->dispatch(new Delete($model));
         });
 
-        static::restored(function ($model) {
-            self::$dispatcher->dispatch(new Restore($model));
-        });
+        if (method_exists(static::class, 'restored')) {
+            static::restored(function ($model) {
+                self::$dispatcher->dispatch(new Restore($model));
+            });
+        }
     }
 }

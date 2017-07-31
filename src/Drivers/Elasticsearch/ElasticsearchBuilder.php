@@ -218,10 +218,10 @@ class ElasticsearchBuilder implements Builder
         foreach ($this->models as $model) {
             $contracts[$model->getSearchableType()] = $model;
             $fields = array_unique(array_merge($fields, $model->getSearchableFields()));
-            $indices = array_unique(array_merge($indices, $this->driver->getModelQuery($model)['index']));
+            $indices = array_unique(array_merge($indices, [$this->driver->getModelQuery($model)['index']]));
 
             if ($this->withTrashed) {
-                $indices = array_unique(array_merge($indices, $this->driver->getModelQuery($model, true)['index']));
+                $indices = array_unique(array_merge($indices, [$this->driver->getModelQuery($model, true)['index']]));
             }
         }
 
