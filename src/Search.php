@@ -19,6 +19,14 @@ class Search
         $this->builder = $driver->builder();
     }
 
+    /**
+     * Model/s to search
+     * Supports multiple models
+     *
+     * @param array ...$models
+     * @return Search
+     * @throws SearchlightException
+     */
     public function in(...$models): Search
     {
         foreach ($models as $model) {
@@ -112,11 +120,19 @@ class Search
         return $this;
     }
 
+    /**
+     * @return bool
+     */
     public function isEmpty(): bool
     {
         return $this->builder->isEmpty();
     }
 
+    /**
+     * Include trashed models in search
+     *
+     * @return $this
+     */
     public function withTrashed()
     {
         $this->builder->withTrashed();
@@ -124,16 +140,31 @@ class Search
         return $this;
     }
 
+    /**
+     * Convert to EloquentBuilder
+     *
+     * @return EloquentBuilder
+     */
     public function builder(): EloquentBuilder
     {
         return $this->builder->build();
     }
 
+    /**
+     * Fetch results
+     *
+     * @return Collection
+     */
     public function get(): Collection
     {
         return $this->builder->get();
     }
 
+    /**
+     * Fetch results using search-as-you-type completion
+     *
+     * @return Collection
+     */
     public function completion(): Collection
     {
         return collect($this->builder->completion())->map(function(SearchlightContract $model) {
@@ -145,6 +176,11 @@ class Search
         });
     }
 
+    /**
+     * Return fresh instance
+     *
+     * @return Search
+     */
     public function newInstance(): Search
     {
         return new static($this->driver);

@@ -37,26 +37,42 @@ class ElasticsearchBuilder implements Builder
         $this->driver = $driver;
     }
 
+    /**
+     * @param SearchlightContract $model
+     */
     public function addModel(SearchlightContract $model)
     {
         $this->models[] = $model;
     }
 
+    /**
+     * @param array $match
+     */
     public function addMatch(array $match)
     {
         $this->match[] = $match;
     }
 
+    /**
+     * @param array $filter
+     */
     public function addFilter(array $filter)
     {
         $this->filter = array_merge_recursive($this->filter, $filter);
     }
 
+    /**
+     * @param array $query
+     */
     public function addRange(array $query)
     {
         $this->range = array_merge_recursive($this->range, $query);
     }
 
+    /**
+     * @return array
+     * @throws SearchlightException
+     */
     private function match()
     {
         $must = [];
@@ -94,6 +110,9 @@ class ElasticsearchBuilder implements Builder
         return compact('must');
     }
 
+    /**
+     * @return array
+     */
     private function filter()
     {
         $must_not = [];
@@ -114,20 +133,29 @@ class ElasticsearchBuilder implements Builder
         return array_filter(compact('must_not', 'must'));
     }
 
+    /**
+     * @return array
+     */
     private function range()
     {
+        $ranges = [];
         $must = [];
 
         foreach ($this->range as $rangeQuery) {
             $operator = self::ELASTICSEARCH_RANGE_OPERATORS[array_search($rangeQuery[1], self::RANGE_OPERATORS)];
-            $must[] = [
-                'range' => [$rangeQuery[0] => [$operator => $rangeQuery[2]]]
-            ];
+            $ranges[$rangeQuery[0]][$operator] = $rangeQuery[2];
+        }
+
+        foreach ($ranges as $key => $value) {
+            $must[] = ['range' => [$key => $value]];
         }
 
         return compact('must');
     }
 
+    /**
+     * @return array
+     */
     private function query(): array
     {
         return [
@@ -137,11 +165,17 @@ class ElasticsearchBuilder implements Builder
         ];
     }
 
+    /**
+     * Set use of trashed index
+     */
     public function withTrashed()
     {
         $this->withTrashed = true;
     }
 
+    /**
+     * @return bool
+     */
     public function isEmpty(): bool
     {
         return empty($this->match)
@@ -149,6 +183,12 @@ class ElasticsearchBuilder implements Builder
             && empty($this->range);
     }
 
+    /**
+     * Eloquent builder
+     *
+     * @return EloquentBuilder
+     * @throws \Exception
+     */
     public function build(): EloquentBuilder
     {
         if (count($this->models) > 1) {
@@ -158,6 +198,11 @@ class ElasticsearchBuilder implements Builder
         return $this->singleSearch();
     }
 
+    /**
+     * Eloquent collection
+     *
+     * @return Collection
+     */
     public function get(): Collection
     {
         return count($this->models) > 1
@@ -165,6 +210,11 @@ class ElasticsearchBuilder implements Builder
             : $this->build()->get();
     }
 
+    /**
+     * Search-as-you-type results
+     *
+     * @return Collection
+     */
     public function completion(): Collection
     {
         $this->searchPrefix = true;
@@ -172,6 +222,12 @@ class ElasticsearchBuilder implements Builder
         return $this->get();
     }
 
+    /**
+     * Returned result limit
+     *
+     * @param int $size
+     * @return $this
+     */
     public function size(int $size)
     {
         $this->size = $size;
@@ -179,6 +235,9 @@ class ElasticsearchBuilder implements Builder
         return $this;
     }
 
+    /**
+     * @return EloquentBuilder
+     */
     private function singleSearch(): EloquentBuilder
     {
         $model = $this->models[0];
@@ -209,6 +268,9 @@ class ElasticsearchBuilder implements Builder
         return $searchQuery;
     }
 
+    /**
+     * @return Collection
+     */
     private function multiSearch(): Collection
     {
         $contracts = [];

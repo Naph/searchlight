@@ -2,23 +2,31 @@
 
 namespace Naph\Searchlight\Model;
 
-use Illuminate\Contracts\Bus\Dispatcher;
 use Naph\Searchlight\Jobs\Delete;
 use Naph\Searchlight\Jobs\Index;
 use Naph\Searchlight\Jobs\Restore;
 
 trait SearchlightTrait
 {
+    /**
+     * @return string
+     */
     public function getSearchableIndex(): string
     {
         return '';
     }
 
+    /**
+     * @return string
+     */
     public function getSearchableType(): string
     {
         return $this->getTable();
     }
 
+    /**
+     * @return array
+     */
     public function getSearchableBody(): array
     {
         return ['id' => $this->getSearchableId()] + array_map(function ($attribute) {
@@ -26,11 +34,17 @@ trait SearchlightTrait
         }, $this->toArray());
     }
 
+    /**
+     * @return int
+     */
     public function getSearchableId(): int
     {
         return (int) $this->id;
     }
 
+    /**
+     * Boot SearchlightTrait to bind model events
+     */
     public static function bootSearchlightTrait()
     {
         static::saved(function ($model) {
