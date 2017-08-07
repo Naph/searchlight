@@ -2,6 +2,8 @@
 
 namespace Naph\Searchlight\Model;
 
+use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Support\Facades\App;
 use Naph\Searchlight\Jobs\Delete;
 use Naph\Searchlight\Jobs\Index;
 use Naph\Searchlight\Jobs\Restore;
@@ -47,17 +49,19 @@ trait SearchlightTrait
      */
     public static function bootSearchlightTrait()
     {
-        static::saved(function ($model) {
-            self::$dispatcher->dispatch(new Index($model));
+        $dispatcher = App::make(Dispatcher::class);
+
+        static::saved(function ($model) use ($dispatcher) {
+            $dispatcher->dispatch(new Index($model));
         });
 
-        static::deleted(function ($model) {
-            self::$dispatcher->dispatch(new Delete($model));
+        static::deleted(function ($model) use ($dispatcher) {
+            $dispatcher->dispatch(new Delete($model));
         });
 
         if (method_exists(static::class, 'restored')) {
-            static::restored(function ($model) {
-                self::$dispatcher->dispatch(new Restore($model));
+            static::restored(function ($model) use ($dispatcher) {
+                $dispatcher->dispatch(new Restore($model));
             });
         }
     }
