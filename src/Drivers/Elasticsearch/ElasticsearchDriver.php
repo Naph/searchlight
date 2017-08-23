@@ -46,10 +46,7 @@ class ElasticsearchDriver extends Driver
     public function delete(SearchlightContract $model)
     {
         if (method_exists($model, 'trashed') && $model->trashed()) {
-            $this->connection->reindex([
-                'source' => $this->getModelQuery($model),
-                'dest' => $this->getModelQuery($model, true)
-            ]);
+            $this->index($model);
         }
 
         try {
