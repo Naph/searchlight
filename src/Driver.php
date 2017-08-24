@@ -34,7 +34,7 @@ abstract class Driver
 
     abstract public function restore(SearchlightContract $model);
 
-    abstract public function deleteAll();
+    abstract public function deleteAll(array $models = []);
 
     abstract public function builder(): Builder;
 

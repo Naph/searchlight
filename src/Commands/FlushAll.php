@@ -3,8 +3,9 @@ declare(strict_types=1);
 
 namespace Naph\Searchlight\Commands;
 
+use Illuminate\Bus\Dispatcher;
 use Illuminate\Console\Command;
-use Naph\Searchlight\Driver;
+use Naph\Searchlight\Jobs\DeleteAll;
 
 class FlushAll extends Command
 {
@@ -23,14 +24,15 @@ class FlushAll extends Command
     protected $description = 'Flushes all searchlight indexes';
 
     /**
-     * Handle the command
+     * Handle the synchronous command
      *
-     * @param Driver $driver
-     * @return void
+     * @param Dispatcher $dispatcher
      */
-    public function handle(Driver $driver)
+    public function handle(Dispatcher $dispatcher)
     {
-        $driver->deleteAll();
-        $this->info('All searchlight indexes have been flushed.');
+        $dispatcher->dispatch(
+            new DeleteAll([])
+        );
+        $this->info('All Searchlight indices have been flushed.');
     }
 }

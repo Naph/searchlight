@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Naph\Searchlight\Commands;
 
+use Illuminate\Bus\Dispatcher;
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Bus\Dispatcher;
-use Naph\Searchlight\Jobs\Delete;
+use Naph\Searchlight\Jobs\DeleteAll;
 
 class Flush extends Command
 {
@@ -24,16 +24,15 @@ class Flush extends Command
     protected $description = 'Flush a searchlight index';
 
     /**
-     * Handle the command
+     * Handle the synchronous command
      *
      * @param Dispatcher $dispatcher
-     * @return void
      */
     public function handle(Dispatcher $dispatcher)
     {
         $model = $this->argument('model');
         $dispatcher->dispatch(
-            new Delete($this->laravel->make($model))
+            new DeleteAll([$this->laravel->make($model)])
         );
         $this->info("Searchlight index for $model has been flushed.");
     }

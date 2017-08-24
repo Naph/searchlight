@@ -67,12 +67,14 @@ class ElasticsearchDriver extends Driver
         }
     }
 
-    public function deleteAll()
+    public function deleteAll(array $models = [])
     {
         $indices = [];
+        $models = $models ?: array_map(function ($repository) {
+            return new $repository();
+        }, $this->repositories);
 
-        foreach ($this->repositories as $repository) {
-            $model = new $repository();
+        foreach ($models as $model) {
             $indices[] = $this->getModelQuery($model)['index'];
             $indices[] = $this->getModelQuery($model, true)['index'];
         }
