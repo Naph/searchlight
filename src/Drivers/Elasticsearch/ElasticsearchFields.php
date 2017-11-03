@@ -7,11 +7,18 @@ use Naph\Searchlight\Fields;
 
 class ElasticsearchFields extends Fields
 {
+    /**
+     * @param array $fields
+     * @return ElasticsearchFields
+     */
     public static function collect(array $fields): ElasticsearchFields
     {
         return new static($fields);
     }
 
+    /**
+     * @return array
+     */
     public function getBoostedFields(): array
     {
         $boostedFields = [];
@@ -23,6 +30,11 @@ class ElasticsearchFields extends Fields
         return $boostedFields;
     }
 
+    /**
+     * @param string $query
+     * @param bool $prefix
+     * @return array
+     */
     public function queryString(string $query, $prefix = false)
     {
         $match = [
@@ -35,6 +47,11 @@ class ElasticsearchFields extends Fields
         return ['multi_match' => $match];
     }
 
+    /**
+     * @param array $query
+     * @param bool $prefix
+     * @return array
+     */
     public function queryArray(array $query, $prefix = false)
     {
         $query = implode(' + ', array_map(function ($string) {

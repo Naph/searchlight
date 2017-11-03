@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Naph\Searchlight;
 
@@ -6,6 +7,9 @@ use Naph\Searchlight\Exceptions\SearchlightException;
 
 class Fields
 {
+    /**
+     * @var array
+     */
     protected $fields;
 
     /**
@@ -41,6 +45,9 @@ class Fields
         $this->fields = $searchFields;
     }
 
+    /**
+     * @return int|null|string
+     */
     public function first()
     {
         foreach ($this->fields as $field => $boost) {

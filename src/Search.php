@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Naph\Searchlight;
 
@@ -65,20 +66,20 @@ class Search
     /**
      * Filter terms
      *
-     *  Filter array example:
-     *  $array = [
-     *    'field' => 'query',
-     *    'field' => null,
-     *    ...
-     *  ];
+     * Filter array example:
+     * $array = [
+     *   'field' => 'query',
+     *   'field' => null,
+     *   ...
+     * ];
      *
-     * @param array $array
-     *
+     * @param array $filter
      * @return Search
+     *
      */
-    public function filter(array $array): Search
+    public function filter(array $filter): Search
     {
-        $this->builder->addFilter($array);
+        $this->builder->addFilter($filter);
 
         return $this;
     }
@@ -87,23 +88,22 @@ class Search
      * Filter by range
      *
      * Range array example:
-     * $array = [
+     * $range = [
      *   ['field', '>', 'number'],
      *   ['field', '<', 'number'],
      *   ...
      * ];
      *
      * or as single:
-     * $array = ['term', '>=', 'number'];
+     * $range = ['term', '>=', 'number'];
      *
-     * @param array $array
-     *
-     * @throws \UnexpectedValueException
+     * @param array $range
      * @return Search
+     * @throws \UnexpectedValueException
      */
-    public function range(array $array): Search
+    public function range(array $range): Search
     {
-        $range = is_array(reset($array)) ? $array : [$array];
+        $range = is_array(reset($range)) ? $range : [$range];
 
         foreach ($range as $key => $array) {
             if (! ($array[2] ?? false)) {
@@ -116,6 +116,34 @@ class Search
         }
 
         $this->builder->addRange($range);
+
+        return $this;
+    }
+
+    /**
+     *
+     * Sort array examples
+     * $sort = [
+     *
+     * as single
+     *   'field' => 'asc|desc',
+     *
+     * or as array.
+     *   'field' => [
+     *     'mode' => 'min|max|sum|avg|median',
+     *     'order' => 'asc|desc',
+     *   ]
+     *   ...
+     * ];
+     *
+     * Additional array sort properties depend on driver used.
+     *
+     * @param array $sort
+     * @return $this
+     */
+    public function sort(array $sort)
+    {
+        $this->builder->addSort($sort);
 
         return $this;
     }

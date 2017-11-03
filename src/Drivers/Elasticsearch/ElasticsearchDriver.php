@@ -11,8 +11,17 @@ use Naph\Searchlight\Model\SearchlightContract;
 
 class ElasticsearchDriver extends Driver
 {
+    /**
+     * @var \Elasticsearch\Client
+     */
     public $connection;
 
+    /**
+     * ElasticsearchDriver constructor.
+     * @param array $repositories
+     * @param array $config
+     * @throws SearchlightException
+     */
     public function __construct(array $repositories, array $config)
     {
         parent::__construct($repositories, $config);
@@ -24,6 +33,12 @@ class ElasticsearchDriver extends Driver
         }
     }
 
+    /**
+     * @param SearchlightContract $model
+     * @param bool $trashed
+     *
+     * @return array
+     */
     public function getModelQuery(SearchlightContract $model, $trashed = false): array
     {
         return [
@@ -33,6 +48,10 @@ class ElasticsearchDriver extends Driver
         ];
     }
 
+    /**
+     * @param SearchlightContract $model
+     * @return void
+     */
     public function index(SearchlightContract $model)
     {
         $document = array_merge(
@@ -43,6 +62,10 @@ class ElasticsearchDriver extends Driver
         $this->connection->index($document);
     }
 
+    /**
+     * @param SearchlightContract $model
+     * @return void
+     */
     public function delete(SearchlightContract $model)
     {
         if (method_exists($model, 'trashed') && $model->trashed()) {
@@ -56,6 +79,10 @@ class ElasticsearchDriver extends Driver
         }
     }
 
+    /**
+     * @param SearchlightContract $model
+     * @return void
+     */
     public function restore(SearchlightContract $model)
     {
         $this->index($model);
@@ -67,6 +94,9 @@ class ElasticsearchDriver extends Driver
         }
     }
 
+    /**
+     * Delete all indices
+     */
     public function deleteAll()
     {
         $indices = [];
@@ -84,6 +114,11 @@ class ElasticsearchDriver extends Driver
         }
     }
 
+    /**
+     * Return instance of driver's builder class
+     *
+     * @return Builder
+     */
     public function builder(): Builder
     {
         return new ElasticsearchBuilder($this);

@@ -15,20 +15,31 @@ class BuildIndex implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
 
+    /**
+     * @var SearchlightContract
+     */
     protected $repository;
 
+    /**
+     * BuildIndex constructor.
+     * @param SearchlightContract $repository
+     */
     public function __construct(SearchlightContract $repository)
     {
         $this->repository = $repository;
     }
 
+    /**
+     * @param Driver $driver
+     * @param Dispatcher $dispatcher
+     */
     public function handle(Driver $driver, Dispatcher $dispatcher)
     {
         set_time_limit(0);
 
         $model = $this->repository;
 
-        if (method_exists($this->repository, 'trashed')) {
+        if (method_exists($model, 'withTrashed')) {
             $model = $model->withTrashed();
         }
 

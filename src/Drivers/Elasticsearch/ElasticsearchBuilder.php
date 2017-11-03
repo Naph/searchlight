@@ -21,6 +21,8 @@ class ElasticsearchBuilder implements Builder
 
     protected $range = [];
 
+    protected $sort = [];
+
     protected $searchPrefix = false;
 
     protected $size = null;
@@ -67,6 +69,14 @@ class ElasticsearchBuilder implements Builder
     public function addRange(array $query)
     {
         $this->range = array_merge_recursive($this->range, $query);
+    }
+
+    /**
+     * @param array $query
+     */
+    public function addSort(array $query)
+    {
+        $this->sort = array_merge_recursive($this->sort, $query);
     }
 
     /**
@@ -156,12 +166,21 @@ class ElasticsearchBuilder implements Builder
     /**
      * @return array
      */
+    public function sort()
+    {
+        return $this->sort;
+    }
+
+    /**
+     * @return array
+     */
     private function query(): array
     {
         return [
             'query' => [
                 'bool' => array_merge_recursive($this->match(), $this->filter(), $this->range())
-            ]
+            ],
+            'sort' => $this->sort()
         ];
     }
 
