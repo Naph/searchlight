@@ -15,15 +15,15 @@ class Delete implements ShouldQueue
     /**
      * @var SearchlightContract
      */
-    protected $model;
+    protected $models;
 
     /**
-     * Delete constructor.
-     * @param SearchlightContract $model
+     * Index constructor.
+     * @param SearchlightContract[] $models
      */
-    public function __construct(SearchlightContract $model)
+    public function __construct(SearchlightContract ...$models)
     {
-        $this->model = $model;
+        $this->models = $models;
     }
 
     /**
@@ -31,6 +31,6 @@ class Delete implements ShouldQueue
      */
     public function handle(Driver $driver)
     {
-        $driver->delete($this->model);
+        $driver->handleDelete($this->models);
     }
 }

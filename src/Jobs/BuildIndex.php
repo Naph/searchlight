@@ -45,9 +45,7 @@ class BuildIndex implements ShouldQueue
 
         // Loop through and push each model to the index
         $model->chunk(1000, function ($models) use ($driver, $dispatcher) {
-            foreach ($models as $model) {
-                $dispatcher->dispatch(new Index($model));
-            }
+            $dispatcher->dispatch(new Index($models));
         });
     }
 }

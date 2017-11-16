@@ -1,11 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Naph\Searchlight;
+namespace Naph\Searchlight\Model;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Naph\Searchlight\Exceptions\SearchlightException;
 
-class Fields
+class Fields implements Arrayable
 {
     /**
      * @var array
@@ -46,14 +47,12 @@ class Fields
     }
 
     /**
-     * @return int|null|string
+     * Get the instance as an array.
+     *
+     * @return array
      */
-    public function first()
+    public function toArray()
     {
-        foreach ($this->fields as $field => $boost) {
-            return $field;
-        }
-
-        return null;
+        return $this->fields;
     }
 }

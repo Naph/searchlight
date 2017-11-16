@@ -15,22 +15,23 @@ class Restore implements ShouldQueue
     /**
      * @var SearchlightContract
      */
-    protected $model;
+    protected $models;
 
     /**
-     * Restore constructor.
-     * @param SearchlightContract $model
+     * Index constructor.
+     * @param SearchlightContract[] $models
      */
-    public function __construct(SearchlightContract $model)
+    public function __construct(SearchlightContract ...$models)
     {
-        $this->model = $model;
+        $this->models = $models;
     }
+
 
     /**
      * @param Driver $driver
      */
     public function handle(Driver $driver)
     {
-        $driver->restore($this->model);
+        $driver->handleRestore($this->models);
     }
 }

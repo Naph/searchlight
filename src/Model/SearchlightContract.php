@@ -5,7 +5,7 @@ namespace Naph\Searchlight\Model;
 interface SearchlightContract
 {
     /**
-     * Fields which are searched (by default)
+     * Searchable properties
      *
      * @return array
      */
@@ -26,16 +26,9 @@ interface SearchlightContract
     public function getSearchableType(): string;
 
     /**
-     * Document body
-     *
-     * @return array
-     */
-    public function getSearchableBody(): array;
-
-    /**
      * Document id
      *
-     * @return int
+     * @return string
      */
-    public function getSearchableId(): int;
+    public function getSearchableId(): string;
 }

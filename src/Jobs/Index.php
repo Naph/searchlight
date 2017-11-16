@@ -15,15 +15,15 @@ class Index implements ShouldQueue
     /**
      * @var SearchlightContract
      */
-    protected $model;
+    protected $models;
 
     /**
      * Index constructor.
-     * @param SearchlightContract $model
+     * @param SearchlightContract[] $models
      */
-    public function __construct(SearchlightContract $model)
+    public function __construct(SearchlightContract ...$models)
     {
-        $this->model = $model;
+        $this->models = $models;
     }
 
     /**
@@ -31,6 +31,6 @@ class Index implements ShouldQueue
      */
     public function handle(Driver $driver)
     {
-        $driver->index($this->model);
+        $driver->handleIndex($this->models);
     }
 }

@@ -5,79 +5,28 @@ namespace Naph\Searchlight\Drivers\Elasticsearch;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Support\Collection;
 use Naph\Searchlight\Builder;
-use Naph\Searchlight\Drivers\Elasticsearch\ElasticsearchFields as Fields;
 use Naph\Searchlight\Exceptions\SearchlightException;
-use Naph\Searchlight\Model\SearchlightContract;
 
-class ElasticsearchBuilder implements Builder
+class ElasticsearchBuilder extends Builder
 {
     const ELASTICSEARCH_RANGE_OPERATORS = ['gt', 'gte', 'lte', 'lt'];
 
+    /**
+     * @var ElasticsearchDriver
+     */
     protected $driver;
 
-    protected $match = [];
+    /**
+     * @var ElasticsearchModel[]
+     */
+    protected $models;
 
-    protected $filter = [];
-
-    protected $range = [];
-
-    protected $sort = [];
-
+    /**
+     * Search-as-you-type flag
+     *
+     * @var bool
+     */
     protected $searchPrefix = false;
-
-    protected $size = null;
-
-    protected $withTrashed = false;
-
-    /**
-     * @var SearchlightContract[] $models
-     */
-    protected $models = [];
-
-    function __construct(ElasticsearchDriver $driver)
-    {
-        $this->driver = $driver;
-    }
-
-    /**
-     * @param SearchlightContract $model
-     */
-    public function addModel(SearchlightContract $model)
-    {
-        $this->models[] = $model;
-    }
-
-    /**
-     * @param array $match
-     */
-    public function addMatch(array $match)
-    {
-        $this->match[] = $match;
-    }
-
-    /**
-     * @param array $filter
-     */
-    public function addFilter(array $filter)
-    {
-        $this->filter = array_merge_recursive($this->filter, $filter);
-    }
-
-    /**
-     * @param array $query
-     */
-    public function addRange(array $query)
-    {
-        $this->range = array_merge_recursive($this->range, $query);
-    }
-
-    /**
-     * @param array $query
-     */
-    public function addSort(array $query)
-    {
-        $this->sort = array_merge_recursive($this->sort, $query);
-    }
 
     /**
      * @return array
@@ -92,14 +41,14 @@ class ElasticsearchBuilder implements Builder
 
             if (is_null($matchQuery['fields']) && count($this->models) === 1) {
                 try {
-                    $fields = Fields::collect($this->models[0]->getSearchableFields());
+                    $fields = ElasticsearchFields::collect($this->models[0]->getSearchableFields());
                 } catch (SearchlightException $e) {
                     throw new SearchlightException(sprintf('(%s): %s', get_class($this->models[0]), $e->getMessage()));
                 }
             } elseif (is_array($matchQuery['fields'])) {
-                $fields = Fields::collect($matchQuery['fields']);
+                $fields = ElasticsearchFields::collect($matchQuery['fields']);
             } elseif (is_string($matchQuery['fields'])) {
-                $fields = Fields::collect([$matchQuery['fields']]);
+                $fields = ElasticsearchFields::collect([$matchQuery['fields']]);
             }
 
             if (is_string($matchQuery['query'])) {
@@ -185,24 +134,6 @@ class ElasticsearchBuilder implements Builder
     }
 
     /**
-     * Set use of trashed index
-     */
-    public function withTrashed()
-    {
-        $this->withTrashed = true;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isEmpty(): bool
-    {
-        return empty($this->match)
-            && empty($this->filter)
-            && empty($this->range);
-    }
-
-    /**
      * Eloquent builder
      *
      * @return EloquentBuilder
@@ -230,7 +161,7 @@ class ElasticsearchBuilder implements Builder
     }
 
     /**
-     * Search-as-you-type results
+     * Search-as-you-type enhanced get
      *
      * @return Collection
      */
@@ -242,32 +173,19 @@ class ElasticsearchBuilder implements Builder
     }
 
     /**
-     * Returned result limit
-     *
-     * @param int $size
-     * @return $this
-     */
-    public function size(int $size)
-    {
-        $this->size = $size;
-
-        return $this;
-    }
-
-    /**
      * @return EloquentBuilder
      */
     private function singleSearch(): EloquentBuilder
     {
         $model = $this->models[0];
-        $indices = [$this->driver->getModelQuery($model)['index']];
+        $indices = [$model->getSearchableIndex()];
 
         if ($this->withTrashed) {
-            $indices[] = $this->driver->getModelQuery($model, true)['index'];
+            $indices[] = $model->getTrashedIndex();
         }
 
         $results = $this->driver->connection->search([
-            'size' => $this->size ?: $this->driver->getConfig('size'),
+            'size' => $this->size ?: $this->driver->config('size'),
             'index' => $indices,
             'type' => $model->getSearchableType(),
             'body' => $this->query()
@@ -299,10 +217,10 @@ class ElasticsearchBuilder implements Builder
         foreach ($this->models as $model) {
             $contracts[$model->getSearchableType()] = $model;
             $fields = array_unique(array_merge($fields, $model->getSearchableFields()));
-            $indices = array_unique(array_merge($indices, [$this->driver->getModelQuery($model)['index']]));
+            $indices = array_unique(array_merge($indices, [$model->getSearchableIndex()]));
 
             if ($this->withTrashed) {
-                $indices = array_unique(array_merge($indices, [$this->driver->getModelQuery($model, true)['index']]));
+                $indices = array_unique(array_merge($indices, [$model->getTrashedIndex()]));
             }
         }
 
@@ -311,7 +229,7 @@ class ElasticsearchBuilder implements Builder
         }
 
         $searchResults = $this->driver->connection->search([
-            'size' => $this->size ?: $this->driver->getConfig('size'),
+            'size' => $this->size ?: $this->driver->config('size'),
             'index' => $indices,
             'type' => array_keys($contracts),
             'body' => $this->query()

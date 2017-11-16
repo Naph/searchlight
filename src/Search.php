@@ -10,8 +10,14 @@ use Naph\Searchlight\Model\SearchlightContract;
 
 class Search
 {
+    /**
+     * @var Driver
+     */
     protected $driver;
 
+    /**
+     * @var Builder
+     */
     protected $builder;
 
     public function __construct(Driver $driver)
@@ -24,19 +30,13 @@ class Search
      * Model/s to search
      * Supports multiple models
      *
-     * @param array ...$models
+     * @param SearchlightContract[] ...$models
      * @return Search
      * @throws SearchlightException
      */
-    public function in(...$models): Search
+    public function in(SearchlightContract ...$models): Search
     {
         foreach ($models as $model) {
-            if (! $model instanceof SearchlightContract) {
-                throw new SearchlightException(
-                    sprintf('Argument passed to %s (%s) must implement interface %s', self::class, get_class($model), SearchlightContract::class)
-                );
-            }
-
             $this->builder->addModel($model);
         }
 
@@ -141,7 +141,7 @@ class Search
      * @param array $sort
      * @return $this
      */
-    public function sort(array $sort)
+    public function sort(array $sort): Search
     {
         $this->builder->addSort($sort);
 
@@ -161,7 +161,7 @@ class Search
      *
      * @return $this
      */
-    public function withTrashed()
+    public function withTrashed(): Search
     {
         $this->builder->withTrashed();
 
@@ -195,12 +195,12 @@ class Search
      */
     public function completion(): Collection
     {
-        return collect($this->builder->completion())->map(function(SearchlightContract $model) {
-            try {
-                return $model->{(new Fields($model->getSearchableFields()))->first()};
-            } catch (SearchlightException $e) {
-                throw new SearchlightException(sprintf('(%s): %s', get_class($model), $e->getMessage()));
+        return collect($this->builder->completion())->map(function (SearchlightContract $model) {
+            foreach ($model->getSearchableFields() as $field => $boost) {
+                return $model->$field;
             }
+
+            return null;
         });
     }
 

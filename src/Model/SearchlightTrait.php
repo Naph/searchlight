@@ -27,21 +27,11 @@ trait SearchlightTrait
     }
 
     /**
-     * @return array
+     * @return string
      */
-    public function getSearchableBody(): array
+    public function getSearchableId(): string
     {
-        return ['id' => $this->getSearchableId()] + array_map(function ($attribute) {
-            return is_bool($attribute) ? intval($attribute) : $attribute;
-        }, $this->toArray());
-    }
-
-    /**
-     * @return int
-     */
-    public function getSearchableId(): int
-    {
-        return (int) $this->id;
+        return (string) $this->id;
     }
 
     /**

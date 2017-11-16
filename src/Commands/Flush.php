@@ -5,6 +5,7 @@ namespace Naph\Searchlight\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Naph\Searchlight\Driver;
 use Naph\Searchlight\Jobs\Delete;
 
 class Flush extends Command
@@ -26,15 +27,13 @@ class Flush extends Command
     /**
      * Handle the command
      *
-     * @param Dispatcher $dispatcher
+     * @param Driver $driver
      * @return void
      */
-    public function handle(Dispatcher $dispatcher)
+    public function handle(Driver $driver)
     {
-        $model = $this->argument('model');
-        $dispatcher->dispatch(
-            new Delete($this->laravel->make($model))
-        );
-        $this->info("Searchlight index for $model has been flushed.");
+        $model = $this->laravel->make($this->argument('model'));
+        $driver->handleFlush($model);
+        $this->info("Searchlight index for {$this->argument('model')} has been flushed.");
     }
 }

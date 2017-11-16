@@ -3,21 +3,26 @@
 namespace Naph\Searchlight\Drivers\Elasticsearch;
 
 use Elasticsearch\ClientBuilder;
-use Elasticsearch\Common\Exceptions\Missing404Exception;
-use Naph\Searchlight\Builder;
-use Naph\Searchlight\Driver;
 use Naph\Searchlight\Exceptions\SearchlightException;
-use Naph\Searchlight\Model\SearchlightContract;
+use Naph\Searchlight\{
+    Builder, Driver
+};
 
 class ElasticsearchDriver extends Driver
 {
+    /**
+     * @var string
+     */
+    protected $decorator = ElasticsearchModel::class;
+
     /**
      * @var \Elasticsearch\Client
      */
     public $connection;
 
     /**
-     * ElasticsearchDriver constructor.
+     * ElasticDriver constructor.
+     *
      * @param array $repositories
      * @param array $config
      * @throws SearchlightException
@@ -26,85 +31,95 @@ class ElasticsearchDriver extends Driver
     {
         parent::__construct($repositories, $config);
 
-        $this->connection = ClientBuilder::create()->setHosts($config['hosts'])->build();
+        $this->connection = ClientBuilder::create()->setHosts($this->config('hosts'))->build();
 
-        if (! $this->config['index']) {
+        if (! $this->config('index')) {
             throw new SearchlightException('Searchlight Exception: default index cannot be empty.');
         }
     }
 
     /**
-     * @param SearchlightContract $model
-     * @param bool $trashed
+     * Return new instance of plugin builder
      *
-     * @return array
+     * @return Builder
      */
-    public function getModelQuery(SearchlightContract $model, $trashed = false): array
+    public function builder(): Builder
     {
-        return [
-            'index' => ($model->getSearchableIndex() ?: $this->config['index']).($trashed ? '_trashed' : ''),
-            'type' => $model->getSearchableType(),
-            'id' => $model->getSearchableId(),
-        ];
+        return new ElasticsearchBuilder($this);
     }
 
     /**
-     * @param SearchlightContract $model
+     * Update search indices
+     *
+     * @param  ElasticsearchModel[] ...$models
      * @return void
      */
-    public function index(SearchlightContract $model)
+    protected function index(...$models): void
     {
-        $document = array_merge(
-            $this->getModelQuery($model, method_exists($model, 'trashed') && $model->trashed()),
-            ['body' => $model->getSearchableBody()]
-        );
-
-        $this->connection->index($document);
+        $this->bulk($models, function (ElasticsearchModel $model) {
+            return [
+                ['index' => $model->metadata()],
+                $model->body(),
+            ];
+        });
     }
 
     /**
-     * @param SearchlightContract $model
+     * Delete search indices
+     *
+     * @param ElasticsearchModel[] ...$models
      * @return void
      */
-    public function delete(SearchlightContract $model)
+    protected function delete(...$models): void
     {
-        if (method_exists($model, 'trashed') && $model->trashed()) {
-            $this->index($model);
-        }
+        $this->bulk($models, function (ElasticsearchModel $model) {
+            $actions = [
+                ['delete' => $model->metadata()],
+            ];
 
-        try {
-            $this->connection->delete($this->getModelQuery($model));
-        } catch (Missing404Exception $exception) {
-            // Delete if exists
-        }
+            if ($model->softDeletes()) {
+                array_push($actions,
+                    ['index' => $model->metadata(true)],
+                    $model->body()
+                );
+            }
+
+            return $actions;
+        });
     }
 
     /**
-     * @param SearchlightContract $model
+     * Restore deleted search indices
+     *
+     * @param ElasticsearchModel[] ...$models
      * @return void
      */
-    public function restore(SearchlightContract $model)
+    protected function restore(...$models): void
     {
-        $this->index($model);
-
-        try {
-            $this->connection->delete($this->getModelQuery($model, true));
-        } catch (Missing404Exception $exception) {
-            // Delete if exists
-        }
+        $this->bulk($models, function (ElasticsearchModel $model) {
+            return [
+                ['delete' => $model->metadata(true)],
+                ['index' => $model->metadata()],
+                $model->body(),
+            ];
+        });
     }
 
     /**
-     * Delete all indices
+     * Flush indices of model type
+     *
+     * @param ElasticsearchModel[] $models
+     * @return void
      */
-    public function deleteAll()
+    protected function flush(...$models): void
     {
         $indices = [];
 
-        foreach ($this->repositories as $repository) {
-            $model = new $repository();
-            $indices[] = $this->getModelQuery($model)['index'];
-            $indices[] = $this->getModelQuery($model, true)['index'];
+        foreach ($models as $model) {
+            array_push($indices,
+                $model->getSearchableIndex(),
+                $model->getTrashedIndex()
+            );
         }
 
         foreach (array_unique($indices) as $index) {
@@ -115,12 +130,18 @@ class ElasticsearchDriver extends Driver
     }
 
     /**
-     * Return instance of driver's builder class
-     *
-     * @return Builder
+     * @param ElasticsearchModel[] $models
+     * @param \Closure $metadata
+     * @return void
      */
-    public function builder(): Builder
+    protected function bulk($models, \Closure $metadata): void
     {
-        return new ElasticsearchBuilder($this);
+        $query = [];
+
+        foreach ($models as $model) {
+            array_push($query, ...$metadata($model));
+        }
+
+        $this->connection->bulk($query);
     }
 }

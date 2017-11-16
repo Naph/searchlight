@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Naph\Searchlight;
 
+use Naph\Searchlight\Model\Decorator;
 use Naph\Searchlight\Model\SearchlightContract;
 
 abstract class Driver
@@ -23,6 +24,13 @@ abstract class Driver
     protected $repositories;
 
     /**
+     * Optional model decorator class
+     *
+     * @var string
+     */
+    protected $decorator = Decorator::class;
+
+    /**
      * Driver constructor.
      *
      * @param array $repositories
@@ -35,12 +43,15 @@ abstract class Driver
     }
 
     /**
+     * Retrieve driver config value
+     * Uses dot notation
+     *
      * @param $key
      * @return mixed
      */
-    public function getConfig($key)
+    public function config(string $key): mixed
     {
-        return $this->config[$key];
+        return array_get($this->config, $key);
     }
 
     /**
@@ -52,38 +63,95 @@ abstract class Driver
     }
 
     /**
-     * @param SearchlightContract $model
-     * @return mixed
-     */
-    abstract public function index(SearchlightContract $model);
-
-    /**
-     * @param SearchlightContract $model
-     * @return mixed
-     */
-    abstract public function delete(SearchlightContract $model);
-
-    /**
-     * @param SearchlightContract $model
-     * @return mixed
-     */
-    abstract public function restore(SearchlightContract $model);
-
-    /**
-     * @return mixed
-     */
-    abstract public function deleteAll();
-
-    /**
+     * Return new instance of plugin builder
+     *
      * @return Builder
      */
     abstract public function builder(): Builder;
 
     /**
+     * Update search indices
+     *
+     * @param  Decorator[] $models
+     * @return void
+     */
+    abstract protected function index(...$models): void;
+
+    /**
+     * Delete models indices
+     *
+     * @param Decorator[] $models
+     * @return void
+     */
+    abstract protected function delete(...$models): void;
+
+    /**
+     * Restore deleted search indices
+     *
+     * @param Decorator[] $models
+     * @return void
+     */
+    abstract protected function restore(...$models): void;
+
+    /**
+     * Flush indices of model type
+     *
+     * @param Decorator[] $models
+     * @return void
+     */
+    abstract protected function flush(...$models): void;
+
+    /**
+     * Returns decorated models
+     *
+     * @param SearchlightContract[] $models
+     * @return SearchlightContract[]
+     */
+    public function decorate(SearchlightContract ...$models): array
+    {
+        if (!$this->decorator) {
+            return $models;
+        }
+
+        return array_map(function ($model) {
+            return new $this->decorator($model);
+        }, $models);
+    }
+
+    /**
+     * @param SearchlightContract[] $models
+     */
+    public function handleIndex(SearchlightContract ...$models): void
+    {
+        $this->index($this->decorate($models));
+    }
+
+    /**
+     * @param SearchlightContract[] $models
+     */
+    public function handleDelete(SearchlightContract ...$models): void
+    {
+        $this->delete($this->decorate($models));
+    }
+
+    /**
+     * @param SearchlightContract[] $models
+     */
+    public function handleRestore(SearchlightContract ...$models): void
+    {
+        $this->restore($this->decorate($models));
+    }
+
+    public function handleFlush(SearchlightContract ...$models): void
+    {
+        $this->flush($this->decorate($models));
+    }
+
+    /**
      * @param string $regex
      * @param $reducer
      */
-    public function qualifier(string $regex, $reducer)
+    public function qualifier(string $regex, $reducer): void
     {
         $this->reducers[$regex] = $reducer;
     }
