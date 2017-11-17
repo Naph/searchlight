@@ -5,7 +5,9 @@ namespace Naph\Searchlight;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Support\Collection;
-use Naph\Searchlight\Model\SearchlightContract;
+use Naph\Searchlight\Model\{
+    Decorator, SearchlightContract
+};
 
 abstract class Builder
 {
@@ -15,7 +17,7 @@ abstract class Builder
     const RANGE_OPERATORS = ['>', '>=', '<=', '<'];
 
     /**
-     * @var SearchlightContract[] $models
+     * @var Decorator[] $models
      */
     protected $models = [];
 
@@ -86,7 +88,7 @@ abstract class Builder
      */
     public function addModel(SearchlightContract $model)
     {
-        $this->models[] = $model;
+        $this->models = array_merge($this->driver->decorate($model), $this->models);
     }
 
     /**

@@ -3,9 +3,11 @@
 namespace Naph\Searchlight\Drivers\Elasticsearch;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Naph\Searchlight\Builder;
 use Naph\Searchlight\Exceptions\SearchlightException;
+use Naph\Searchlight\Model\SearchlightContract;
 
 class ElasticsearchBuilder extends Builder
 {
@@ -19,7 +21,7 @@ class ElasticsearchBuilder extends Builder
     /**
      * @var ElasticsearchModel[]
      */
-    protected $models;
+    protected $models = [];
 
     /**
      * Search-as-you-type flag
@@ -52,7 +54,7 @@ class ElasticsearchBuilder extends Builder
             }
 
             if (is_string($matchQuery['query'])) {
-                if (! trim($matchQuery['query'])) {
+                if (!trim($matchQuery['query'])) {
                     continue;
                 }
 
@@ -184,7 +186,7 @@ class ElasticsearchBuilder extends Builder
             $indices[] = $model->getTrashedIndex();
         }
 
-        $results = $this->driver->connection->search([
+        $results = $this->driver->connection()->search([
             'size' => $this->size ?: $this->driver->config('size'),
             'index' => $indices,
             'type' => $model->getSearchableType(),
@@ -192,17 +194,8 @@ class ElasticsearchBuilder extends Builder
         ]);
         $documents = array_column($results['hits']['hits'], '_source');
         $documentIds = array_column($documents, 'id');
-        $searchQuery = $model->whereIn($model->getKeyName(), $documentIds);
 
-        if ($documentIds) {
-            $searchQuery->orderByRaw('FIELD(id, '.implode(',', $documentIds).')', 'ASC');
-        }
-
-        if ($this->withTrashed) {
-            $searchQuery->withTrashed();
-        }
-
-        return $searchQuery;
+        return $this->convertQuery($model, $documentIds);
     }
 
     /**
@@ -228,11 +221,11 @@ class ElasticsearchBuilder extends Builder
             $this->match[$key]['fields'] = $fields;
         }
 
-        $searchResults = $this->driver->connection->search([
+        $searchResults = $this->driver->connection()->search([
             'size' => $this->size ?: $this->driver->config('size'),
             'index' => $indices,
             'type' => array_keys($contracts),
-            'body' => $this->query()
+            'body' => $this->query(),
         ]);
 
         $hits = collect($searchResults['hits']['hits']);
@@ -240,15 +233,9 @@ class ElasticsearchBuilder extends Builder
 
         foreach ($types as $type) {
             $typeResults = $hits->where('_type', $type);
-            $typeIds = $typeResults->pluck('_id')->toArray();
-            $modelQuery = $contracts[$type]->whereIn('id', $typeIds)
-                ->orderByRaw('FIELD(id, '.implode(',', $typeIds).')', 'ASC');
-
-            if ($this->withTrashed) {
-                $modelQuery->withTrashed();
-            }
-
-            $models = $modelQuery->get();
+            $documentIds = $typeResults->pluck('_id')->toArray();
+            $model = $contracts[$type];
+            $models = $this->convertQuery($model, $documentIds)->get();
 
             foreach ($typeResults as $pos => $typeResult) {
                 if ($result = $models->where('id', $typeResult['_id'])->first()) {
@@ -260,5 +247,34 @@ class ElasticsearchBuilder extends Builder
         }
 
         return $hits;
+    }
+
+    /**
+     * Find models by ids and preserves order
+     *
+     * @param ElasticsearchModel $model
+     * @param array $ids
+     *
+     * @return EloquentBuilder
+     */
+    private function convertQuery($model, array $ids): EloquentBuilder
+    {
+        $query = $model->newQuery()->whereIn('id', $ids);
+
+        if ($ids) {
+            $statements = array_map(function ($index, $id) use ($model) {
+                return "WHEN {$model->getKeyName()}={$id} THEN {$index}";
+            }, array_keys($ids), $ids);
+
+            $case = implode(' ', $statements);
+
+            $query->orderByRaw("CASE {$case} END ASC");
+        }
+
+        if ($this->withTrashed) {
+            $query->withTrashed();
+        }
+
+        return $query;
     }
 }

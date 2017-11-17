@@ -49,7 +49,7 @@ abstract class Driver
      * @param $key
      * @return mixed
      */
-    public function config(string $key): mixed
+    public function config(string $key)
     {
         return array_get($this->config, $key);
     }
@@ -109,12 +109,8 @@ abstract class Driver
      */
     public function decorate(SearchlightContract ...$models): array
     {
-        if (!$this->decorator) {
-            return $models;
-        }
-
         return array_map(function ($model) {
-            return new $this->decorator($model);
+            return new $this->decorator($this, $model);
         }, $models);
     }
 

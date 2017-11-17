@@ -80,4 +80,29 @@ abstract class Decorator implements SearchlightContract
 
         return $id;
     }
+
+    /**
+     * Bridge model methods
+     *
+     * @param $name
+     * @param $arguments
+     * @return mixed
+     */
+    public function __call($name, $arguments)
+    {
+        if (method_exists($this->model, $name)) {
+            return call_user_func_array([$this->model, $name], $arguments);
+        }
+    }
+
+    /**
+     * Bridge dynamic model attributes
+     *
+     * @param  string  $key
+     * @return mixed
+     */
+    public function __get($key)
+    {
+        return $this->model->getAttribute($key);
+    }
 }

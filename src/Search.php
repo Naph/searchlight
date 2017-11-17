@@ -20,6 +20,11 @@ class Search
      */
     protected $builder;
 
+    /**
+     * Search constructor.
+     *
+     * @param \Naph\Searchlight\Driver $driver
+     */
     public function __construct(Driver $driver)
     {
         $this->driver = $driver;

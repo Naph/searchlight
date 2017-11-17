@@ -2,8 +2,10 @@
 
 namespace Naph\Searchlight\Drivers\Elasticsearch;
 
-use Elasticsearch\ClientBuilder;
-use Naph\Searchlight\Exceptions\SearchlightException;
+use Elasticsearch\{
+    Client, ClientBuilder
+};
+use GuzzleHttp\Ring\Client\MockHandler;
 use Naph\Searchlight\{
     Builder, Driver
 };
@@ -16,26 +18,55 @@ class ElasticsearchDriver extends Driver
     protected $decorator = ElasticsearchModel::class;
 
     /**
-     * @var \Elasticsearch\Client
+     * @var Client
      */
-    public $connection;
+    private $connection;
 
     /**
-     * ElasticDriver constructor.
-     *
-     * @param array $repositories
-     * @param array $config
-     * @throws SearchlightException
+     * @var MockHandler
      */
-    public function __construct(array $repositories, array $config)
+    public static $handler;
+
+    /**
+     * Return new or existing Elasticsearch connection
+     *
+     * @return Client
+     */
+    public function connection()
     {
-        parent::__construct($repositories, $config);
-
-        $this->connection = ClientBuilder::create()->setHosts($this->config('hosts'))->build();
-
-        if (! $this->config('index')) {
-            throw new SearchlightException('Searchlight Exception: default index cannot be empty.');
+        if ($this->connection) {
+            return $this->connection;
         }
+
+        $builder = ClientBuilder::create()->setHosts($this->config('hosts'));
+
+        if (self::$handler) {
+            $builder->setHandler(self::$handler);
+        }
+
+        $this->connection = $builder->build();
+
+        return $this->connection;
+    }
+
+    /**
+     * Set expected result from Elasticsearch
+     *
+     * @param array $body
+     */
+    public static function setMockedResponse(array $body)
+    {
+        $temp = tmpfile();
+        fwrite($temp, json_encode($body));
+        fseek($temp, 0);
+
+        self::$handler = new MockHandler([
+            'status' => 200,
+            'transfer_stats' => [
+                'total_time' => 2000,
+            ],
+            'body' => $temp,
+        ]);
     }
 
     /**
