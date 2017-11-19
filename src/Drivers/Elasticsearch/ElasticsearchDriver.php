@@ -56,16 +56,16 @@ class ElasticsearchDriver extends Driver
      */
     public static function setMockedResponse(array $body)
     {
-        $temp = tmpfile();
-        fwrite($temp, json_encode($body));
-        fseek($temp, 0);
+        $stream = tmpfile();
+        fwrite($stream, json_encode($body));
+        fseek($stream, 0);
 
         self::$handler = new MockHandler([
             'status' => 200,
             'transfer_stats' => [
                 'total_time' => 2000,
             ],
-            'body' => $temp,
+            'body' => $stream,
         ]);
     }
 
@@ -96,7 +96,7 @@ class ElasticsearchDriver extends Driver
     }
 
     /**
-     * Delete search indices
+     * Delete model documents
      *
      * @param ElasticsearchModel[] ...$models
      * @return void
@@ -137,26 +137,18 @@ class ElasticsearchDriver extends Driver
     }
 
     /**
-     * Flush indices of model type
+     * Flush all models of type
      *
      * @param ElasticsearchModel[] $models
      * @return void
      */
     protected function flush(...$models): void
     {
-        $indices = [];
-
         foreach ($models as $model) {
-            array_push($indices,
-                $model->getSearchableIndex(),
-                $model->getTrashedIndex()
-            );
-        }
-
-        foreach (array_unique($indices) as $index) {
-            if ($this->connection->indices()->exists(compact('index'))) {
-                $this->connection->indices()->delete(compact('index'));
-            }
+            $this->connection()->indices()->deleteMapping([
+                'index' => '_all',
+                'type' => $model->getSearchableType(),
+            ]);
         }
     }
 
