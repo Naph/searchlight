@@ -39,7 +39,16 @@ return [
             /**
              * Max search results returned from driver.
              */
-            'size' => 2000
-        ]
+            'size' => 2000,
+        ],
+
+        'eloquent' => [
+            'class' => Naph\Searchlight\Drivers\Eloquent\EloquentDriver::class,
+
+            /**
+             * Max search results returned from driver.
+             */
+            'size' => 2000,
+        ],
     ]
 ];

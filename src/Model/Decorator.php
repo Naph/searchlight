@@ -2,11 +2,13 @@
 
 namespace Naph\Searchlight\Model;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\{
+    Builder, Model
+};
 use Naph\Searchlight\Driver;
 use Naph\Searchlight\Exceptions\SearchlightException;
 
-abstract class Decorator implements SearchlightContract
+class Decorator implements SearchlightContract
 {
     /**
      * @var Driver
@@ -79,6 +81,14 @@ abstract class Decorator implements SearchlightContract
         }
 
         return $id;
+    }
+
+    /**
+     * @return Builder
+     */
+    public function newQuery(): Builder
+    {
+        return $this->model->newQuery();
     }
 
     /**

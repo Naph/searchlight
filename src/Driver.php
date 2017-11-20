@@ -31,6 +31,15 @@ abstract class Driver
     protected $decorator = Decorator::class;
 
     /**
+     * Driver supports indexing
+     * Toggles observation of index/delete/restore/flush events
+     * Disable this to prevent bloating queue with unhandled jobs
+     *
+     * @var bool
+     */
+    public $supportsIndexing = true;
+
+    /**
      * Driver constructor.
      *
      * @param array $repositories

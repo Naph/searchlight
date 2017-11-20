@@ -12,10 +12,17 @@
         <testsuite name="Searchlight Elasticsearch Driver">
             <directory suffix="Test.php">tests/Elasticsearch</directory>
         </testsuite>
+        <testsuite name="Searchlight Eloquent Driver">
+            <directory suffix="Test.php">tests/Eloquent</directory>
+        </testsuite>
     </testsuites>
     <filter>
         <whitelist processUncoveredFilesFromWhitelist="true">
             <directory suffix=".php">./src</directory>
         </whitelist>
     </filter>
+    <php>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+    </php>
 </phpunit>

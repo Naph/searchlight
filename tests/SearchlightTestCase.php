@@ -4,8 +4,11 @@ namespace Naph\Searchlight\Tests;
 
 use Illuminate\Console\Application;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\TestCase;
+use Illuminate\Support\Facades\Schema;
 use Naph\Searchlight\SearchlightServiceProvider;
-use PHPUnit\Framework\TestCase;
 
 class SearchlightTestCase extends TestCase
 {
@@ -14,26 +17,44 @@ class SearchlightTestCase extends TestCase
      */
     protected $app;
 
+    /**
+     * Set up TestCase
+     */
     protected function setUp()
     {
-        $this->app = $this->createApplication();
-        $this->setUpDatabase();
+        parent::setUp();
+
+        $this->refreshDatabase();
     }
 
+    /**
+     * Overloaded createApplication
+     *
+     * @return Application
+     */
     public function createApplication()
     {
         $app = require __DIR__.'/../vendor/laravel/laravel/bootstrap/app.php';
 
-        $app->register(SearchlightServiceProvider::class);
-
         $app->make(Kernel::class)->bootstrap();
+
+        $app->register(SearchlightServiceProvider::class);
 
         return $app;
     }
 
-    public function setUpDatabase()
+    /**
+     * Run migrations
+     */
+    public function refreshDatabase()
     {
-        $this->app['config']->set('database.default', 'sqlite');
-        $this->app['config']->set('database.connections.sqlite.database', ':memory:');
+        // Models
+        Schema::create('test_models', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->string('email');
+            $table->string('location');
+            $table->timestamps();
+        });
     }
 }

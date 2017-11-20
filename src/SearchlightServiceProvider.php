@@ -23,9 +23,9 @@ class SearchlightServiceProvider extends ServiceProvider
 
     public function register()
     {
-        /*$this->mergeConfigFrom(
+        $this->mergeConfigFrom(
             __DIR__.'/../config/searchlight.php', 'searchlight'
-        );*/
+        );
 
         // Singleton the searchlight driver
         $this->app->singleton(Driver::class, function($app) {
@@ -37,26 +37,28 @@ class SearchlightServiceProvider extends ServiceProvider
         });
 
         // Listen to events
-        $bus = $this->app->make(BusDispatcher::class);
-        $events = $this->app->make(EventsDispatcher::class);
+        if ($this->app->make(Driver::class)->supportsIndexing) {
+            $bus = $this->app->make(BusDispatcher::class);
+            $events = $this->app->make(EventsDispatcher::class);
 
-        $events->listen(['eloquent.saved: *'], function ($model) use ($bus) {
-            if ($model instanceof SearchlightContract) {
-                $bus->dispatch(new Index($model));
-            }
-        });
+            $events->listen(['eloquent.saved: *'], function ($model) use ($bus) {
+                if ($model instanceof SearchlightContract) {
+                    $bus->dispatch(new Index($model));
+                }
+            });
 
-        $events->listen(['eloquent.deleted: *'], function ($model) use ($bus) {
-            if ($model instanceof SearchlightContract) {
-                $bus->dispatch(new Delete($model));
-            }
-        });
+            $events->listen(['eloquent.deleted: *'], function ($model) use ($bus) {
+                if ($model instanceof SearchlightContract) {
+                    $bus->dispatch(new Delete($model));
+                }
+            });
 
-        $events->listen(['eloquent.restored: *'], function ($model) use ($bus) {
-            if ($model instanceof SearchlightContract) {
-                $bus->dispatch(new Restore($model));
-            }
-        });
+            $events->listen(['eloquent.restored: *'], function ($model) use ($bus) {
+                if ($model instanceof SearchlightContract) {
+                    $bus->dispatch(new Restore($model));
+                }
+            });
+        }
 
         // Register commands when running in console
         if ($this->app->runningInConsole()) {
