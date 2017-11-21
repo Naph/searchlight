@@ -89,7 +89,7 @@ class ElasticsearchDriver extends Driver
     {
         $this->bulk($models, function (ElasticsearchModel $model) {
             return [
-                ['index' => $model->metadata()],
+                ['index' => $model->metadata($model->isSoftDeleted())],
                 $model->body(),
             ];
         });

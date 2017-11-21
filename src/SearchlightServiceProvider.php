@@ -7,9 +7,7 @@ use Illuminate\Bus\Dispatcher as BusDispatcher;
 use Illuminate\Events\Dispatcher as EventsDispatcher;
 use Illuminate\Support\ServiceProvider;
 use Naph\Searchlight\Commands;
-use Naph\Searchlight\Jobs\Delete;
-use Naph\Searchlight\Jobs\Index;
-use Naph\Searchlight\Jobs\Restore;
+use Naph\Searchlight\Jobs;
 use Naph\Searchlight\Model\SearchlightContract;
 
 class SearchlightServiceProvider extends ServiceProvider
@@ -43,19 +41,19 @@ class SearchlightServiceProvider extends ServiceProvider
 
             $events->listen(['eloquent.saved: *'], function ($model) use ($bus) {
                 if ($model instanceof SearchlightContract) {
-                    $bus->dispatch(new Index($model));
+                    $bus->dispatch(new Jobs\Index($model));
                 }
             });
 
             $events->listen(['eloquent.deleted: *'], function ($model) use ($bus) {
                 if ($model instanceof SearchlightContract) {
-                    $bus->dispatch(new Delete($model));
+                    $bus->dispatch(new Jobs\Delete($model));
                 }
             });
 
             $events->listen(['eloquent.restored: *'], function ($model) use ($bus) {
                 if ($model instanceof SearchlightContract) {
-                    $bus->dispatch(new Restore($model));
+                    $bus->dispatch(new Jobs\Restore($model));
                 }
             });
         }

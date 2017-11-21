@@ -42,7 +42,7 @@ abstract class Builder
     protected $sort = [];
 
     /**
-     * @var ?int
+     * @var int|null
      */
     protected $size = null;
 

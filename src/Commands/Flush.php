@@ -4,9 +4,7 @@ declare(strict_types=1);
 namespace Naph\Searchlight\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Bus\Dispatcher;
 use Naph\Searchlight\Driver;
-use Naph\Searchlight\Jobs\Delete;
 
 class Flush extends Command
 {

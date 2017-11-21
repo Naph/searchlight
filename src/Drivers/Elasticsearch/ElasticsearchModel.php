@@ -58,6 +58,16 @@ class ElasticsearchModel extends Decorator
     }
 
     /**
+     * If model is soft deleted
+     *
+     * @return bool
+     */
+    public function isSoftDeleted(): bool
+    {
+        return method_exists($this->model, 'trashed') && $this->model->trashed();
+    }
+
+    /**
      * Combine metadata with body
      *
      * @return array

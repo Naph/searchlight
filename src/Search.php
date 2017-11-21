@@ -174,6 +174,18 @@ class Search
     }
 
     /**
+     * @param int $count
+     *
+     * @return Search
+     */
+    public function take(int $count): Search
+    {
+        $this->builder->size($count);
+
+        return $this;
+    }
+
+    /**
      * Convert to EloquentBuilder
      *
      * @return EloquentBuilder
@@ -202,7 +214,7 @@ class Search
     {
         return collect($this->builder->completion())->map(function (SearchlightContract $model) {
             foreach ($model->getSearchableFields() as $field => $boost) {
-                return $model->$field;
+                return $model->{$field === 0 ? $boost : $field};
             }
 
             return null;
