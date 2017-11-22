@@ -17,7 +17,6 @@ class ElasticsearchTestCase extends SearchlightTestCase
     {
         parent::setUp();
 
-        $config = require __DIR__ . '/../../config/searchlight.php';
-        $this->driver = new ElasticsearchDriver([TestModel::class], $config['drivers']['elasticsearch']);
+        $this->driver = $this->app['searchlight']->driver('elasticsearch');
     }
 }

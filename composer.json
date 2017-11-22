@@ -7,7 +7,7 @@
         {"name": "Naph", "email": "naph@getgood.gg"}
     ],
     "require": {
-        "php": "^7.0",
+        "php": "^7.1",
         "elasticsearch/elasticsearch": "^5.2",
         "illuminate/bus": "^5.5",
         "illuminate/database": "^5.5",

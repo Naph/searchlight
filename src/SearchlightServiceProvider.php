@@ -19,23 +19,34 @@ class SearchlightServiceProvider extends ServiceProvider
      */
     protected $defer = true;
 
+    /**
+     * The array of created drivers
+     *
+     * @var array
+     */
+    protected $drivers = [];
+
     public function register()
     {
         $this->mergeConfigFrom(
             __DIR__.'/../config/searchlight.php', 'searchlight'
         );
 
-        // Singleton the searchlight driver
-        $this->app->singleton(Driver::class, function($app) {
-            $config = $app['config']->get('searchlight');
-            $driver = $config['drivers'][$config['driver']];
-            $repositories = $config['repositories'];
-
-            return new $driver['class']($repositories, $driver);
+        // Singleton the Searchlight DriverManager
+        $this->app->singleton('searchlight', function ($app) {
+            return new DriverManager($app);
         });
 
-        // Listen to events
-        if ($this->app->make(Driver::class)->supportsIndexing) {
+        // Singleton the default Searchlight Driver
+        $this->app->singleton('searchlight.driver', function ($app) {
+            return $app['searchlight']->driver();
+        });
+
+        // Instance concrete driver to interface
+        $this->app->instance(Driver::class, $this->app['searchlight.driver']);
+
+        // Bind events when supporting indexing
+        if ($this->app[Driver::class]->supportsIndexing) {
             $bus = $this->app->make(BusDispatcher::class);
             $events = $this->app->make(EventsDispatcher::class);
 

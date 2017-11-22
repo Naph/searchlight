@@ -3,11 +3,9 @@
 namespace Naph\Searchlight\Drivers\Elasticsearch;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Naph\Searchlight\Builder;
 use Naph\Searchlight\Exceptions\SearchlightException;
-use Naph\Searchlight\Model\SearchlightContract;
 
 class ElasticsearchBuilder extends Builder
 {

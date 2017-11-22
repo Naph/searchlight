@@ -17,7 +17,6 @@ class EloquentTestCase extends SearchlightTestCase
     {
         parent::setUp();
 
-        $config = require __DIR__ . '/../../config/searchlight.php';
-        $this->driver = new EloquentDriver([TestModel::class], $config['drivers']['eloquent']);
+        $this->driver = $this->app['searchlight']->driver('eloquent');
     }
 }
