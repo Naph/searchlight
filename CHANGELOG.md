@@ -6,10 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - Eloquent driver
 - Testing suites
 - Friendly config comments
+- Driver can be changed at query level
 ### Changed
 - Major refactoring to internal indexing structure to simplify driver implementation
 - Allow custom drivers an easier way to decorate models, removing bloat from model traits
 - Index event observers are booted within the provider as opposed to within the trait
+- Engineered object instancing from object pool
 ### Fixed
 - Support for all Laravel defined database drivers
 

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Naph\Searchlight;
 
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Support\Collection;
 use Naph\Searchlight\Exceptions\SearchlightException;
@@ -10,6 +11,11 @@ use Naph\Searchlight\Model\SearchlightContract;
 
 class Search
 {
+    /**
+     * @var \Illuminate\Contracts\Foundation\Application
+     */
+    protected $app;
+
     /**
      * @var Driver
      */
@@ -21,14 +27,71 @@ class Search
     protected $builder;
 
     /**
+     * @var SearchlightContract[]
+     */
+    protected $models = [];
+
+    /**
+     * @var array
+     */
+    protected $matches = [];
+
+    /**
+     * @var array
+     */
+    protected $filters = [];
+
+    /**
+     * @var array
+     */
+    protected $ranges = [];
+
+    /**
+     * @var array
+     */
+    protected $sorts = [];
+
+    /**
+     * @var bool
+     */
+    protected $withTrashed = false;
+
+    /**
+     * @var int|null
+     */
+    protected $take = null;
+
+    /**
      * Search constructor.
      *
+     * @param \Illuminate\Contracts\Foundation\Application $app
+     */
+    public function __construct(Application $app)
+    {
+        $this->app = $app;
+        $this->driver();
+    }
+
+    /**
      * @param \Naph\Searchlight\Driver $driver
      */
-    public function __construct(Driver $driver)
+    protected function setDriver(Driver $driver)
     {
         $this->driver = $driver;
-        $this->builder = $driver->builder();
+    }
+
+    /**
+     * Set the driver to use
+     *
+     * @param string|null $name
+     *
+     * @return \Naph\Searchlight\Search
+     */
+    public function driver(string $name = null): Search
+    {
+        $this->setDriver($this->app['searchlight']->driver($name));
+
+        return $this;
     }
 
     /**
@@ -41,9 +104,7 @@ class Search
      */
     public function in(SearchlightContract ...$models): Search
     {
-        foreach ($models as $model) {
-            $this->builder->addModel($model);
-        }
+        $this->models = array_merge($this->models, $models);
 
         return $this;
     }
@@ -62,8 +123,7 @@ class Search
             return $this;
         }
 
-        $query = $this->driver->reduce($this, $query);
-        $this->builder->addMatch(compact('query', 'fields'));
+        $this->matches[] = compact('query', 'fields');
 
         return $this;
     }
@@ -84,7 +144,7 @@ class Search
      */
     public function filter(array $filter): Search
     {
-        $this->builder->addFilter($filter);
+        $this->filters[] = $filter;
 
         return $this;
     }
@@ -120,13 +180,12 @@ class Search
             }
         }
 
-        $this->builder->addRange($range);
+        $this->ranges[] = $range;
 
         return $this;
     }
 
     /**
-     *
      * Sort array examples
      * $sort = [
      *
@@ -148,17 +207,9 @@ class Search
      */
     public function sort(array $sort): Search
     {
-        $this->builder->addSort($sort);
+        $this->sorts[] = $sort;
 
         return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isEmpty(): bool
-    {
-        return $this->builder->isEmpty();
     }
 
     /**
@@ -168,7 +219,7 @@ class Search
      */
     public function withTrashed(): Search
     {
-        $this->builder->withTrashed();
+        $this->withTrashed = true;
 
         return $this;
     }
@@ -180,9 +231,61 @@ class Search
      */
     public function take(int $count): Search
     {
-        $this->builder->size($count);
+        $this->take = $count;
 
         return $this;
+    }
+
+    /**
+     * Finalise the builder and return
+     *
+     * @return \Naph\Searchlight\Builder
+     */
+    protected function builder(): Builder
+    {
+        $builder = $this->driver->builder();
+
+        foreach ($this->models as $model) {
+            $builder->addModel($model);
+        }
+
+        foreach ($this->matches as $match) {
+            $match['query'] = $this->app['searchlight']->reduce($this, $match['query']);
+            $builder->addMatch($match);
+        }
+
+        foreach ($this->filters as $filter) {
+            $builder->addFilter($filter);
+        }
+
+        foreach ($this->ranges as $range) {
+            $builder->addRange($range);
+        }
+
+        foreach ($this->sorts as $sort) {
+            $builder->addSort($sort);
+        }
+
+        if ($this->withTrashed) {
+            $builder->withTrashed();
+        }
+
+        if ($this->take) {
+            $builder->size($this->take);
+        }
+
+        return $builder;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEmpty(): bool
+    {
+        return empty($this->matches)
+            && empty($this->filters)
+            && empty($this->ranges)
+            && empty($this->sorts);
     }
 
     /**
@@ -190,9 +293,9 @@ class Search
      *
      * @return EloquentBuilder
      */
-    public function builder(): EloquentBuilder
+    public function eloquent(): EloquentBuilder
     {
-        return $this->builder->build();
+        return $this->builder()->build();
     }
 
     /**
@@ -202,7 +305,7 @@ class Search
      */
     public function get(): Collection
     {
-        return $this->builder->get();
+        return $this->builder()->get();
     }
 
     /**
@@ -212,7 +315,7 @@ class Search
      */
     public function completion(): Collection
     {
-        return collect($this->builder->completion())->map(function (SearchlightContract $model) {
+        return collect($this->builder()->completion())->map(function (SearchlightContract $model) {
             foreach ($model->getSearchableFields() as $field => $boost) {
                 return $model->{$field === 0 ? $boost : $field};
             }
@@ -226,8 +329,8 @@ class Search
      *
      * @return Search
      */
-    public function newInstance(): Search
+    public function newQuery(): Search
     {
-        return new static($this->driver);
+        return new static($this->app);
     }
 }

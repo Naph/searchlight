@@ -16,11 +16,6 @@ abstract class Driver
     /**
      * @var array
      */
-    protected $reducers;
-
-    /**
-     * @var array
-     */
     protected $repositories;
 
     /**
@@ -47,7 +42,6 @@ abstract class Driver
      */
     public function __construct(array $repositories, array $config) {
         $this->config = $config;
-        $this->reducers = [];
         $this->repositories = $repositories;
     }
 
@@ -150,34 +144,5 @@ abstract class Driver
     public function handleFlush(SearchlightContract ...$models): void
     {
         $this->flush($this->decorate($models));
-    }
-
-    /**
-     * @param string $regex
-     * @param $reducer
-     */
-    public function qualifier(string $regex, $reducer): void
-    {
-        $this->reducers[$regex] = $reducer;
-    }
-
-    /**
-     * @param Search $search
-     * @param $query
-     * @return mixed
-     */
-    public function reduce(Search $search, $query)
-    {
-        foreach ($this->reducers as $regex => $reducer) {
-            $query = preg_replace_callback($regex, function ($matches) use ($search, $reducer) {
-                if ($reducer instanceof \Closure) {
-                    $reducer($search, $matches[1]);
-                } elseif (is_array($reducer)) {
-                    call_user_func_array([$reducer[0], $reducer[1]], [$search, $matches[1]]);
-                }
-            }, $query);
-        }
-
-        return $query;
     }
 }

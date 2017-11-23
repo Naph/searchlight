@@ -33,6 +33,11 @@ class DriverManager
     protected $customDrivers = [];
 
     /**
+     * @var array
+     */
+    protected $reducers = [];
+
+    /**
      * DriverManager constructor.
      *
      * @param \Illuminate\Contracts\Foundation\Application $app
@@ -52,10 +57,6 @@ class DriverManager
     public function driver(?string $name = null): Driver
     {
         $name = $name ?: $this->getDefaultDriver();
-
-        if ($name === 'eloquent') {
-            //dd($this->resolve($name));
-        }
 
         return isset($this->drivers[$name])
             ? $this->drivers[$name]
@@ -173,5 +174,34 @@ class DriverManager
     public function provide($name, \Closure $callback)
     {
         $this->customDrivers[$name] = $callback;
+    }
+
+    /**
+     * @param string $regex
+     * @param $reducer
+     */
+    public function qualifier(string $regex, $reducer): void
+    {
+        $this->reducers[$regex] = $reducer;
+    }
+
+    /**
+     * @param Search $search
+     * @param $query
+     * @return mixed
+     */
+    public function reduce(Search $search, $query)
+    {
+        foreach ($this->reducers as $regex => $reducer) {
+            $query = preg_replace_callback($regex, function ($matches) use ($search, $reducer) {
+                if ($reducer instanceof \Closure) {
+                    $reducer($search, $matches[1]);
+                } elseif (is_array($reducer)) {
+                    call_user_func_array([$reducer[0], $reducer[1]], [$search, $matches[1]]);
+                }
+            }, $query);
+        }
+
+        return $query;
     }
 }

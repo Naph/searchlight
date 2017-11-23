@@ -2,24 +2,11 @@
 
 namespace Naph\Searchlight\Tests\Elasticsearch\Feature;
 
-use Naph\Searchlight\Search;
 use Naph\Searchlight\Tests\Elasticsearch\ElasticsearchTestCase;
 use Naph\Searchlight\Tests\TestModel;
 
 class SearchTest extends ElasticsearchTestCase
 {
-    /**
-     * @var Search
-     */
-    protected $search;
-
-    public function setUp()
-    {
-        parent::setUp();
-
-        $this->search = new Search($this->driver);
-    }
-
     /**
      * @test
      */

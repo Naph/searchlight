@@ -32,14 +32,19 @@ class SearchlightServiceProvider extends ServiceProvider
             __DIR__.'/../config/searchlight.php', 'searchlight'
         );
 
-        // Singleton the Searchlight DriverManager
+        // Singleton the Searchlight driver manager
         $this->app->singleton('searchlight', function ($app) {
             return new DriverManager($app);
         });
 
-        // Singleton the default Searchlight Driver
+        // Singleton the default Searchlight driver
         $this->app->singleton('searchlight.driver', function ($app) {
             return $app['searchlight']->driver();
+        });
+
+        // Singleton the Searchlight search builder
+        $this->app->singleton('searchlight.search', function ($app) {
+            return new Search($app);
         });
 
         // Instance concrete driver to interface
