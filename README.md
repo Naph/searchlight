@@ -23,7 +23,7 @@ composer require naph/searchlight
 
 Register the service provider
 ```php
-Naph\Searchlight\SearchlightServiceProvider;
+Naph\Searchlight\SearchlightServiceProvider::class
 ```
 
 Publish vendor files containing driver and host configuration. Lumen users should copy the file instead.

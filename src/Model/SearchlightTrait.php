@@ -2,6 +2,8 @@
 
 namespace Naph\Searchlight\Model;
 
+use Illuminate\Support\Str;
+
 trait SearchlightTrait
 {
     /**
@@ -17,14 +19,6 @@ trait SearchlightTrait
      */
     public function getSearchableType(): string
     {
-        return $this->getTable();
-    }
-
-    /**
-     * @return string
-     */
-    public function getSearchableId(): string
-    {
-        return (string) $this->id;
+        return str_replace('\\', '', Str::snake(Str::plural(class_basename($this))));
     }
 }

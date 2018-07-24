@@ -6,6 +6,7 @@ namespace Naph\Searchlight\Jobs;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Queue\InteractsWithQueue;
 use Naph\Searchlight\Driver;
 use Naph\Searchlight\Model\SearchlightContract;
@@ -44,7 +45,7 @@ class BuildIndex implements ShouldQueue
         }
 
         // Loop through and push each model to the index
-        $model->chunk(1000, function ($models) use ($driver, $dispatcher) {
+        $model->chunk(1000, function (Collection $models) use ($driver, $dispatcher) {
             $dispatcher->dispatch(new Index($models));
         });
     }

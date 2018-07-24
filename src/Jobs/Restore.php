@@ -32,6 +32,6 @@ class Restore implements ShouldQueue
      */
     public function handle(Driver $driver)
     {
-        $driver->handleRestore($this->models);
+        $driver->handleRestore(...$this->models);
     }
 }

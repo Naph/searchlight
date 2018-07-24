@@ -11,9 +11,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - Major refactoring to internal indexing structure to simplify driver implementation
 - Allow custom drivers an easier way to decorate models, removing bloat from model traits
 - Index event observers are booted within the provider as opposed to within the trait
-- Engineered object instancing from object pool
+- Re-engineered instancing drivers to use object pool in DriverManager
 ### Fixed
-- Support for all Laravel defined database drivers
+- Support for all Laravel database drivers
 
 ## [0.6.0] - 2017/06/11
 ### Added

@@ -4,6 +4,7 @@ namespace Naph\Searchlight\Tests\Elasticsearch;
 
 use Naph\Searchlight\Drivers\Elasticsearch\ElasticsearchDriver;
 use Naph\Searchlight\Search;
+use Naph\Searchlight\SearchlightServiceProvider;
 use Naph\Searchlight\Tests\SearchlightTestCase;
 
 class ElasticsearchTestCase extends SearchlightTestCase
@@ -22,7 +23,9 @@ class ElasticsearchTestCase extends SearchlightTestCase
     {
         parent::setUp();
 
-        $this->driver = $this->app['searchlight']->driver('elasticsearch');
-        $this->search = $this->app['searchlight.search']->driver('elasticsearch');
+        $this->app['config']['searchlight.driver'] = 'elasticsearch';
+        $this->app->register(SearchlightServiceProvider::class);
+        $this->search = $this->app['searchlight.search'];
+        $this->driver = $this->app['searchlight.driver'];
     }
 }

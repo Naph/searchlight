@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Naph\Searchlight;
 
+use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
 use Naph\Searchlight\Model\Decorator;
 use Naph\Searchlight\Model\SearchlightContract;
 
@@ -35,14 +36,28 @@ abstract class Driver
     public $supportsIndexing = true;
 
     /**
+     * Bus dispatcher
+     * Available to the observer class
+     *
+     * @var BusDispatcher
+     */
+    private $bus;
+
+    /**
      * Driver constructor.
      *
      * @param array $repositories
      * @param array $config
+     * @param BusDispatcher $bus
      */
-    public function __construct(array $repositories, array $config) {
+    public function __construct(array $repositories, array $config, BusDispatcher $bus) {
         $this->config = $config;
         $this->repositories = $repositories;
+        $this->bus = $bus;
+
+        if ($this->supportsIndexing) {
+            $this->attachObservers();
+        }
     }
 
     /**
@@ -55,6 +70,18 @@ abstract class Driver
     public function config(string $key)
     {
         return array_get($this->config, $key);
+    }
+
+    /**
+     * Return new Searchlight Observer
+     *
+     * @param array $events
+     *
+     * @return \Naph\Searchlight\SearchlightObserver
+     */
+    public function observer($events = ['saved', 'deleted', 'restored'])
+    {
+        return new SearchlightObserver($events, $this->bus);
     }
 
     /**
@@ -78,7 +105,7 @@ abstract class Driver
      * @param  Decorator[] $models
      * @return void
      */
-    abstract protected function index(...$models): void;
+    abstract protected function index($models): void;
 
     /**
      * Delete models indices
@@ -86,7 +113,7 @@ abstract class Driver
      * @param Decorator[] $models
      * @return void
      */
-    abstract protected function delete(...$models): void;
+    abstract protected function delete($models): void;
 
     /**
      * Restore deleted search indices
@@ -94,7 +121,7 @@ abstract class Driver
      * @param Decorator[] $models
      * @return void
      */
-    abstract protected function restore(...$models): void;
+    abstract protected function restore($models): void;
 
     /**
      * Flush indices of model type
@@ -102,7 +129,7 @@ abstract class Driver
      * @param Decorator[] $models
      * @return void
      */
-    abstract protected function flush(...$models): void;
+    abstract protected function flush($models): void;
 
     /**
      * Returns decorated models
@@ -122,7 +149,7 @@ abstract class Driver
      */
     public function handleIndex(SearchlightContract ...$models): void
     {
-        $this->index($this->decorate($models));
+        $this->index($this->decorate(...$models));
     }
 
     /**
@@ -130,7 +157,7 @@ abstract class Driver
      */
     public function handleDelete(SearchlightContract ...$models): void
     {
-        $this->delete($this->decorate($models));
+        $this->delete($this->decorate(...$models));
     }
 
     /**
@@ -138,11 +165,21 @@ abstract class Driver
      */
     public function handleRestore(SearchlightContract ...$models): void
     {
-        $this->restore($this->decorate($models));
+        $this->restore($this->decorate(...$models));
     }
 
     public function handleFlush(SearchlightContract ...$models): void
     {
-        $this->flush($this->decorate($models));
+        $this->flush($this->decorate(...$models));
+    }
+
+    /**
+     * Attach an observer to each repository.
+     */
+    private function attachObservers()
+    {
+        foreach ($this->getRepositories() as $repository) {
+            $repository::observe($this->observer());
+        }
     }
 }

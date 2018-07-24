@@ -20,21 +20,24 @@ class ElasticsearchModel extends Decorator
      * API consumable model metadata
      *
      * @param bool $trashed
+     *
      * @return array
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     public function metadata(bool $trashed = false): array
     {
         return [
-            'index' => $trashed
+            '_index' => $trashed
                 ? $this->getTrashedIndex()
                 : $this->getSearchableIndex(),
-            'type' => $this->getSearchableType(),
-            'id' => $this->getSearchableId(),
+            '_type' => $this->getSearchableType(),
+            '_id' => $this->getPrimaryKey(),
         ];
     }
 
     /**
      * @return array
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     public function body(): array
     {
@@ -71,6 +74,7 @@ class ElasticsearchModel extends Decorator
      * Combine metadata with body
      *
      * @return array
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     public function query(): array
     {

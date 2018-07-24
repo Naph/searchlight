@@ -72,15 +72,25 @@ class Decorator implements SearchlightContract
      * @return string
      * @throws SearchlightException
      */
-    public function getSearchableId(): string
+    public function getPrimaryKey(): string
     {
-        $id = $this->model->getSearchableId();
+        $id = $this->model->getKey();
 
         if (! $id) {
             throw new SearchlightException('Searchable id is empty.');
         }
 
         return $id;
+    }
+
+    /**
+     * Get id name of model
+     *
+     * @return string
+     */
+    public function getPrimaryKeyName()
+    {
+        return $this->model->getKeyName();
     }
 
     /**

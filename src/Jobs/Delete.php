@@ -31,6 +31,6 @@ class Delete implements ShouldQueue
      */
     public function handle(Driver $driver)
     {
-        $driver->handleDelete($this->models);
+        $driver->handleDelete(...$this->models);
     }
 }

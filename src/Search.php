@@ -3,16 +3,15 @@ declare(strict_types=1);
 
 namespace Naph\Searchlight;
 
-use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Support\Collection;
-use Naph\Searchlight\Exceptions\SearchlightException;
 use Naph\Searchlight\Model\SearchlightContract;
 
 class Search
 {
     /**
-     * @var \Illuminate\Contracts\Foundation\Application
+     * @var Container
      */
     protected $app;
 
@@ -64,9 +63,9 @@ class Search
     /**
      * Search constructor.
      *
-     * @param \Illuminate\Contracts\Foundation\Application $app
+     * @param Container $app
      */
-    public function __construct(Application $app)
+    public function __construct(Container $app)
     {
         $this->app = $app;
         $this->driver();
@@ -85,7 +84,7 @@ class Search
      *
      * @param string|null $name
      *
-     * @return \Naph\Searchlight\Search
+     * @return Search
      */
     public function driver(string $name = null): Search
     {
@@ -98,9 +97,9 @@ class Search
      * Model/s to search
      * Supports multiple models
      *
-     * @param SearchlightContract[] ...$models
+     * @param SearchlightContract[] $models
+     *
      * @return Search
-     * @throws SearchlightException
      */
     public function in(SearchlightContract ...$models): Search
     {
@@ -239,7 +238,7 @@ class Search
     /**
      * Finalise the builder and return
      *
-     * @return \Naph\Searchlight\Builder
+     * @return Builder
      */
     protected function builder(): Builder
     {

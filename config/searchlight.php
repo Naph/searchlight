@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'driver' => getenv('SEARCHLIGHT_DRIVER') ?: 'elasticsearch',
+    'driver' => env('SEARCHLIGHT_DRIVER', 'elasticsearch'),
 
     /*
     |--------------------------------------------------------------------------
@@ -58,14 +58,14 @@ return [
     'drivers' => [
 
         'elasticsearch' => [
-            'index' => getenv('ELASTICSEARCH_INDEX') ?: 'searchlight',
+            'index' => env('ELASTICSEARCH_INDEX', 'searchlight'),
             'hosts' => [
                 [
-                    'scheme' => getenv('ELASTICSEARCH_SCHEME') ?: 'http',
-                    'user'   => getenv('ELASTICSEARCH_USER'),
-                    'pass'   => getenv('ELASTICSEARCH_PASS'),
-                    'host'   => getenv('ELASTICSEARCH_HOST') ?: 'localhost',
-                    'port'   => getenv('ELASTICSEARCH_PORT') ?: '9200',
+                    'scheme' => env('ELASTICSEARCH_SCHEME', 'http'),
+                    'user'   => env('ELASTICSEARCH_USER'),
+                    'pass'   => env('ELASTICSEARCH_PASS'),
+                    'host'   => env('ELASTICSEARCH_HOST', 'localhost'),
+                    'port'   => env('ELASTICSEARCH_PORT', '9200'),
                 ]
             ],
         ],

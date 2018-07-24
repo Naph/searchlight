@@ -122,6 +122,7 @@ class ElasticsearchBuilder extends Builder
 
     /**
      * @return array
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     private function query(): array
     {
@@ -137,12 +138,12 @@ class ElasticsearchBuilder extends Builder
      * Eloquent builder
      *
      * @return EloquentBuilder
-     * @throws \Exception
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     public function build(): EloquentBuilder
     {
         if (count($this->models) > 1) {
-            throw new \Exception('Multiple model search does not support `builder`');
+            throw new SearchlightException('Multiple model search does not support `builder`');
         }
 
         return $this->singleSearch();
@@ -152,6 +153,7 @@ class ElasticsearchBuilder extends Builder
      * Eloquent collection
      *
      * @return Collection
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     public function get(): Collection
     {
@@ -164,6 +166,7 @@ class ElasticsearchBuilder extends Builder
      * Search-as-you-type enhanced get
      *
      * @return Collection
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     public function completion(): Collection
     {
@@ -174,6 +177,7 @@ class ElasticsearchBuilder extends Builder
 
     /**
      * @return EloquentBuilder
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     private function singleSearch(): EloquentBuilder
     {
@@ -190,14 +194,17 @@ class ElasticsearchBuilder extends Builder
             'type' => $model->getSearchableType(),
             'body' => $this->query()
         ]);
-        $documents = array_column($results['hits']['hits'], '_source');
-        $documentIds = array_column($documents, 'id');
+
+        $total = $results['hits']['total'];
+        $documents = $results['hits']['hits'];
+        $documentIds = array_column($documents, '_id');
 
         return $this->convertQuery($model, $documentIds);
     }
 
     /**
      * @return Collection
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     private function multiSearch(): Collection
     {
@@ -255,13 +262,13 @@ class ElasticsearchBuilder extends Builder
      *
      * @return EloquentBuilder
      */
-    private function convertQuery($model, array $ids): EloquentBuilder
+    private function convertQuery(ElasticsearchModel $model, array $ids): EloquentBuilder
     {
-        $query = $model->newQuery()->whereIn('id', $ids);
+        $query = $model->newQuery()->whereIn($model->getPrimaryKeyName(), $ids);
 
         if ($ids) {
             $statements = array_map(function ($index, $id) use ($model) {
-                return "WHEN {$model->getKeyName()}={$id} THEN {$index}";
+                return "WHEN {$model->getPrimaryKeyName()}=\"{$id}\" THEN {$index}";
             }, array_keys($ids), $ids);
 
             $case = implode(' ', $statements);

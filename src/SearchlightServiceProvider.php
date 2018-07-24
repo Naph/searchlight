@@ -3,12 +3,8 @@ declare(strict_types=1);
 
 namespace Naph\Searchlight;
 
-use Illuminate\Bus\Dispatcher as BusDispatcher;
-use Illuminate\Events\Dispatcher as EventsDispatcher;
 use Illuminate\Support\ServiceProvider;
 use Naph\Searchlight\Commands;
-use Naph\Searchlight\Jobs;
-use Naph\Searchlight\Model\SearchlightContract;
 
 class SearchlightServiceProvider extends ServiceProvider
 {
@@ -38,41 +34,14 @@ class SearchlightServiceProvider extends ServiceProvider
         });
 
         // Singleton the default Searchlight driver
-        $this->app->singleton('searchlight.driver', function ($app) {
+        $this->app->singleton(Driver::class, function ($app) {
             return $app['searchlight']->driver();
         });
 
         // Singleton the Searchlight search builder
-        $this->app->singleton('searchlight.search', function ($app) {
+        $this->app->singleton(Search::class, function ($app) {
             return new Search($app);
         });
-
-        // Instance concrete driver to interface
-        $this->app->instance(Driver::class, $this->app['searchlight.driver']);
-
-        // Bind events when supporting indexing
-        if ($this->app[Driver::class]->supportsIndexing) {
-            $bus = $this->app->make(BusDispatcher::class);
-            $events = $this->app->make(EventsDispatcher::class);
-
-            $events->listen(['eloquent.saved: *'], function ($model) use ($bus) {
-                if ($model instanceof SearchlightContract) {
-                    $bus->dispatch(new Jobs\Index($model));
-                }
-            });
-
-            $events->listen(['eloquent.deleted: *'], function ($model) use ($bus) {
-                if ($model instanceof SearchlightContract) {
-                    $bus->dispatch(new Jobs\Delete($model));
-                }
-            });
-
-            $events->listen(['eloquent.restored: *'], function ($model) use ($bus) {
-                if ($model instanceof SearchlightContract) {
-                    $bus->dispatch(new Jobs\Restore($model));
-                }
-            });
-        }
 
         // Register commands when running in console
         if ($this->app->runningInConsole()) {
@@ -85,7 +54,7 @@ class SearchlightServiceProvider extends ServiceProvider
             ]);
 
             $this->publishes([
-                __DIR__.'/../config/searchlight.php' => $this->app->make('path.config').'/searchlight.php'
+                __DIR__.'/../config/searchlight.php' => config_path('/searchlight.php'),
             ], 'searchlight');
         }
     }
@@ -97,6 +66,9 @@ class SearchlightServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return [Driver::class];
+        return [
+            Search::class,
+            Driver::class,
+        ];
     }
 }

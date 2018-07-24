@@ -4,6 +4,7 @@ namespace Naph\Searchlight;
 
 use Naph\Searchlight\Drivers\Elasticsearch\ElasticsearchDriver;
 use Naph\Searchlight\Drivers\Eloquent\EloquentDriver;
+use Illuminate\Bus\Dispatcher as BusDispatcher;
 
 /**
  * Searchlight DriverManager
@@ -21,7 +22,7 @@ class DriverManager
     /**
      * The array of created drivers
      *
-     * @var \Naph\Searchlight\Driver[]
+     * @var Driver[]
      */
     protected $drivers = [];
 
@@ -52,7 +53,7 @@ class DriverManager
      *
      * @param string|null $name
      *
-     * @return \Naph\Searchlight\Driver
+     * @return Driver
      */
     public function driver(?string $name = null): Driver
     {
@@ -69,24 +70,25 @@ class DriverManager
      *
      * @param string $name
      *
-     * @return \Naph\Searchlight\Driver
+     * @return Driver
      */
     protected function resolve(string $name): Driver
     {
         $config = $this->getDriverConfig($name);
+        $bus = $this->app->make(BusDispatcher::class);
 
         if (is_null($config)) {
             throw new \InvalidArgumentException("Searchlight driver [{$name}] is not defined.");
         }
 
         if (isset($this->customCreators[$config['driver']])) {
-            return $this->callCustomCreator($name, $config);
+            return $this->callCustomCreator($name, $config, $bus);
         }
 
         $driverMethod = 'create' . ucfirst($config['driver']) . 'Driver';
 
         if (method_exists($this, $driverMethod)) {
-            return $this->{$driverMethod}($name, $config);
+            return $this->{$driverMethod}($name, $config, $bus);
         }
 
         throw new \InvalidArgumentException("Searchlight driver [{$name}] is not defined.");
@@ -97,12 +99,13 @@ class DriverManager
      *
      * @param string $name
      * @param array $config
+     * @param BusDispatcher $bus
      *
-     * @return \Naph\Searchlight\Driver
+     * @return Driver
      */
-    protected function createElasticsearchDriver(string $name, array $config): Driver
+    protected function createElasticsearchDriver(string $name, array $config, BusDispatcher $bus): Driver
     {
-        return $this->drivers[$name] = new ElasticsearchDriver($config['repositories'], $config);
+        return $this->drivers[$name] = new ElasticsearchDriver($config['repositories'], $config, $bus);
     }
 
     /**
@@ -110,12 +113,13 @@ class DriverManager
      *
      * @param string $name
      * @param array $config
+     * @param BusDispatcher $bus
      *
-     * @return \Naph\Searchlight\Driver
+     * @return Driver
      */
-    protected function createEloquentDriver(string $name, array $config): Driver
+    protected function createEloquentDriver(string $name, array $config, BusDispatcher $bus): Driver
     {
-        return $this->drivers[$name] = new EloquentDriver($config['repositories'], $config);
+        return $this->drivers[$name] = new EloquentDriver($config['repositories'], $config, $bus);
     }
 
     /**
@@ -134,11 +138,11 @@ class DriverManager
      * @param $name
      * @param $config
      *
-     * @return \Naph\Searchlight\Driver
+     * @return Driver
      */
-    protected function callCustomCreator($name, $config): Driver
+    protected function callCustomCreator($name, $config, $bus): Driver
     {
-        return $this->customDrivers[$config['driver']]($this->app, $name, $config);
+        return $this->customDrivers[$config['driver']]($this->app, $name, $config, $bus);
     }
 
     /**

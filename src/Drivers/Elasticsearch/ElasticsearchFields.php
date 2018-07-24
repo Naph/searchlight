@@ -9,7 +9,9 @@ class ElasticsearchFields extends Fields
 {
     /**
      * @param array $fields
+     *
      * @return ElasticsearchFields
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     public static function collect(array $fields): ElasticsearchFields
     {
@@ -60,7 +62,7 @@ class ElasticsearchFields extends Fields
         $match = [
             'fields' => $this->getBoostedFields(),
             'query' => $query,
-            'type' => $prefix ? 'phrase_prefix' : 'most_fields',
+            'analyze_wildcard' => $prefix,
             'lenient' => true
         ];
 

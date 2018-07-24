@@ -82,10 +82,10 @@ class ElasticsearchDriver extends Driver
     /**
      * Update search indices
      *
-     * @param  ElasticsearchModel[] ...$models
+     * @param  ElasticsearchModel[] $models
      * @return void
      */
-    protected function index(...$models): void
+    protected function index($models): void
     {
         $this->bulk($models, function (ElasticsearchModel $model) {
             return [
@@ -98,10 +98,10 @@ class ElasticsearchDriver extends Driver
     /**
      * Delete model documents
      *
-     * @param ElasticsearchModel[] ...$models
+     * @param ElasticsearchModel[] $models
      * @return void
      */
-    protected function delete(...$models): void
+    protected function delete($models): void
     {
         $this->bulk($models, function (ElasticsearchModel $model) {
             $actions = [
@@ -122,10 +122,10 @@ class ElasticsearchDriver extends Driver
     /**
      * Restore deleted search indices
      *
-     * @param ElasticsearchModel[] ...$models
+     * @param ElasticsearchModel[] $models
      * @return void
      */
-    protected function restore(...$models): void
+    protected function restore($models): void
     {
         $this->bulk($models, function (ElasticsearchModel $model) {
             return [
@@ -140,15 +140,20 @@ class ElasticsearchDriver extends Driver
      * Flush all models of type
      *
      * @param ElasticsearchModel[] $models
+     *
      * @return void
+     * @throws \Exception
      */
-    protected function flush(...$models): void
+    protected function flush($models): void
     {
         foreach ($models as $model) {
-            $this->connection()->indices()->deleteMapping([
-                'index' => '_all',
-                'type' => $model->getSearchableType(),
-            ]);
+            $mapping = [
+                'index' => $model->getSearchableIndex(),
+            ];
+
+            if ($this->connection()->indices()->exists($mapping)) {
+                $this->connection()->indices()->delete($mapping);
+            }
         }
     }
 
@@ -159,12 +164,16 @@ class ElasticsearchDriver extends Driver
      */
     protected function bulk($models, \Closure $metadata): void
     {
-        $query = [];
+        $query = collect();
 
         foreach ($models as $model) {
-            array_push($query, ...$metadata($model));
+            $query = $query->merge($metadata($model));
         }
 
-        $this->connection->bulk($query);
+        foreach ($query->chunk(840) as $body) {
+            $this->connection->bulk([
+                'body' => $body->toArray(),
+            ]);
+        }
     }
 }

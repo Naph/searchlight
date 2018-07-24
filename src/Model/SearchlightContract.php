@@ -24,11 +24,4 @@ interface SearchlightContract
      * @return string
      */
     public function getSearchableType(): string;
-
-    /**
-     * Document id
-     *
-     * @return string
-     */
-    public function getSearchableId(): string;
 }

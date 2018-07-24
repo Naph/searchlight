@@ -33,7 +33,7 @@ class FlushAll extends Command
         $models = array_map(function (string $class) {
             return $this->laravel->make($class);
         }, $driver->getRepositories());
-        $driver->handleFlush($models);
+        $driver->handleFlush(...$models);
         $this->info('All searchlight indexes have been flushed.');
     }
 }

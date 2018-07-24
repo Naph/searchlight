@@ -7,7 +7,6 @@ use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\Support\Facades\Schema;
-use Naph\Searchlight\SearchlightServiceProvider;
 
 class SearchlightTestCase extends TestCase
 {
@@ -29,12 +28,8 @@ class SearchlightTestCase extends TestCase
     public function createApplication()
     {
         $app = require __DIR__.'/../vendor/laravel/laravel/bootstrap/app.php';
-
         $app->make(Kernel::class)->bootstrap();
-
         $app['config']['searchlight.repositories'] = [TestModel::class];
-
-        $app->register(SearchlightServiceProvider::class);
 
         return $app;
     }

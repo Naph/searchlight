@@ -28,7 +28,7 @@ class EloquentDriver extends Driver
      *
      * @return void
      */
-    protected function index(...$models): void
+    protected function index($models): void
     {
         // No support
     }
@@ -40,7 +40,7 @@ class EloquentDriver extends Driver
      *
      * @return void
      */
-    protected function delete(...$models): void
+    protected function delete($models): void
     {
         // No support
     }
@@ -52,7 +52,7 @@ class EloquentDriver extends Driver
      *
      * @return void
      */
-    protected function restore(...$models): void
+    protected function restore($models): void
     {
         // No support
     }
@@ -64,7 +64,7 @@ class EloquentDriver extends Driver
      *
      * @return void
      */
-    protected function flush(...$models): void
+    protected function flush($models): void
     {
         // No support
     }

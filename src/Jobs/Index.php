@@ -5,6 +5,7 @@ namespace Naph\Searchlight\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Collection;
 use Naph\Searchlight\Driver;
 use Naph\Searchlight\Model\SearchlightContract;
 
@@ -19,9 +20,9 @@ class Index implements ShouldQueue
 
     /**
      * Index constructor.
-     * @param SearchlightContract[] $models
+     * @param SearchlightContract[] | Collection $models
      */
-    public function __construct(SearchlightContract ...$models)
+    public function __construct($models)
     {
         $this->models = $models;
     }
@@ -31,6 +32,6 @@ class Index implements ShouldQueue
      */
     public function handle(Driver $driver)
     {
-        $driver->handleIndex($this->models);
+        $driver->handleIndex(...$this->models);
     }
 }

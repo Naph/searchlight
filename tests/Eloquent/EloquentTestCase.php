@@ -4,6 +4,7 @@ namespace Naph\Searchlight\Tests\Eloquent;
 
 use Naph\Searchlight\Drivers\Eloquent\EloquentDriver;
 use Naph\Searchlight\Search;
+use Naph\Searchlight\SearchlightServiceProvider;
 use Naph\Searchlight\Tests\SearchlightTestCase;
 
 class EloquentTestCase extends SearchlightTestCase
@@ -22,7 +23,9 @@ class EloquentTestCase extends SearchlightTestCase
     {
         parent::setUp();
 
-        $this->driver = $this->app['searchlight']->driver('eloquent');
-        $this->search = $this->app['searchlight.search']->driver('eloquent');
+        $this->app['config']['searchlight.driver'] = 'eloquent';
+        $this->app->register(SearchlightServiceProvider::class);
+        $this->search = $this->app['searchlight.search'];
+        $this->driver = $this->app['searchlight.driver'];
     }
 }
