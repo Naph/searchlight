@@ -43,11 +43,34 @@ class ElasticsearchModel extends Decorator
     {
         $body = [];
 
-        foreach ($this->getSearchableFields() as $field => $boost) {
-            $body[$field] = $this->model->getAttributeValue($field);
+        foreach ($this->getSearchableFields() as $name => $field) {
+            $body[$name] = $this->model->getAttributeValue($name);
         }
 
         return $body;
+    }
+
+    /**
+     * @return array
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     */
+    public function mapping(): array
+    {
+        $properties = [];
+
+        foreach ($this->getSearchableFields() as $name => $field) {
+            if (isset($field['type'])) {
+                $properties[$name] = [
+                    'type' => $field['type'],
+                ];
+            }
+        }
+
+        if (empty($properties)) {
+          return [];
+        }
+
+        return [$this->getSearchableType() => compact('properties')];
     }
 
     /**
@@ -68,16 +91,5 @@ class ElasticsearchModel extends Decorator
     public function isSoftDeleted(): bool
     {
         return method_exists($this->model, 'trashed') && $this->model->trashed();
-    }
-
-    /**
-     * Combine metadata with body
-     *
-     * @return array
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
-     */
-    public function query(): array
-    {
-        return array_merge($this->metadata(), ['body' => $this->body()]);
     }
 }

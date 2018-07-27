@@ -21,16 +21,23 @@ class Decorator implements SearchlightContract
     protected $model;
 
     /**
+     * @var \Naph\Searchlight\Model\Fields
+     */
+    protected $fields;
+
+    /**
      * ModelDecorator constructor.
      *
      * @param Driver $driver
      * @param SearchlightContract $model
-     * @internal param array $config
+     *
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     public function __construct(Driver $driver, SearchlightContract $model)
     {
         $this->driver = $driver;
         $this->model = $model;
+        $this->fields = new Fields($model->getSearchableFields());
     }
 
     /**
@@ -41,9 +48,7 @@ class Decorator implements SearchlightContract
      */
     public function getSearchableFields(): array
     {
-        $fields = new Fields($this->model->getSearchableFields());
-
-        return $fields->toArray();
+        return $this->fields->toArray();
     }
 
     /**

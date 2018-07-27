@@ -5,6 +5,7 @@ namespace Naph\Searchlight\Commands;
 
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Console\Command;
+use Naph\Searchlight\Driver;
 
 class Rebuild extends Command
 {

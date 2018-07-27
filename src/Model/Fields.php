@@ -25,25 +25,34 @@ class Fields implements Arrayable
             throw new SearchlightException('Searchable fields are empty.');
         }
 
-        $searchFields = [];
-
         foreach ($fields as $key => $value) {
             if (is_integer($key)) {
-                if (! isset($searchFields[$value])) {
-                    $searchFields[$value] = 1.0;
-                }
-            } else {
-                if (! isset($searchFields[$key])) {
-                    $searchFields[$key] = floatval($value);
-                } elseif ($searchFields[$key] < floatval($value)) {
-                    $searchFields[$key] = floatval($value);
-                }
+                $this->setField($value, 1.0);
+            } elseif (is_float($value) || is_integer($value)) {
+                $this->setField($key, floatval($value));
+            } elseif (is_array($value)) {
+                $this->setField($key, array_get($value, 'value', 1.0), array_get($value, 'type'));
             }
         }
 
-        arsort($searchFields);
+        uasort($this->fields, function ($a, $b) {
+            return $a['value'] < $b['value'] ? 1: -1;
+        });
+    }
 
-        $this->fields = $searchFields;
+    public function collect()
+    {
+        return collect($this->fields);
+    }
+
+    /**
+     * @param string $key
+     * @param float $value
+     * @param null|string $type
+     */
+    public function setField(string $key, float $value, ?string $type = null)
+    {
+        $this->fields[$key] = compact('value', 'type');
     }
 
     /**

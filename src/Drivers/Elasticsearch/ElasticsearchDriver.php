@@ -2,12 +2,13 @@
 
 namespace Naph\Searchlight\Drivers\Elasticsearch;
 
+use Elasticsearch\Common\Exceptions\NoNodesAvailableException;
 use Elasticsearch\{
     Client, ClientBuilder
 };
 use GuzzleHttp\Ring\Client\MockHandler;
 use Naph\Searchlight\{
-    Builder, Driver
+    Builder, Driver, Exceptions\SearchlightException
 };
 
 class ElasticsearchDriver extends Driver
@@ -31,6 +32,7 @@ class ElasticsearchDriver extends Driver
      * Return new or existing Elasticsearch connection
      *
      * @return Client
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     public function connection()
     {
@@ -45,6 +47,12 @@ class ElasticsearchDriver extends Driver
         }
 
         $this->connection = $builder->build();
+
+        try {
+            $this->buildIndices();
+        } catch (NoNodesAvailableException $e) {
+            throw new SearchlightException('Unable to reach Elasticsearch node(s).');
+        }
 
         return $this->connection;
     }
@@ -174,6 +182,42 @@ class ElasticsearchDriver extends Driver
             $this->connection->bulk([
                 'body' => $body->toArray(),
             ]);
+        }
+    }
+
+    /**
+     * @throws \Elasticsearch\Common\Exceptions\NoNodesAvailableException
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     */
+    private function buildIndices()
+    {
+        try {
+            $indices = $this->connection()->indices()->get([
+                'index' => '_all'
+            ]);
+        } catch (NoNodesAvailableException $e) {
+            throw $e;
+        }
+
+        foreach ($this->repositories as $repository) {
+            $mapping = [];
+            $model = new ElasticsearchModel($this, new $repository());
+            $index = $model->getSearchableIndex();
+
+            if (!isset($indices[$index])) {
+                $this->connection()->indices()->create(compact('index'));
+                $mapping = $model->mapping();
+            } elseif (!isset($indices[$index]['mappings'][$model->getSearchableType()])) {
+                $mapping = $model->mapping();
+            }
+
+            if (!empty($mapping)) {
+                $this->connection()->indices()->putMapping([
+                    'index' => $model->getSearchableIndex(),
+                    'type' => $model->getSearchableType(),
+                    'body' => $mapping,
+                ]);
+            }
         }
     }
 }
