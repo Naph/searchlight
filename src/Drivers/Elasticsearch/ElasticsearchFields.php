@@ -25,8 +25,8 @@ class ElasticsearchFields extends Fields
     {
         $boostedFields = [];
 
-        foreach ($this->fields as $field => $boost) {
-            $boostedFields[] = $field.'^'.$boost;
+        foreach ($this->fields as $field => $value) {
+            $boostedFields[] = $field.'^'.$value['boost'];
         }
 
         return $boostedFields;

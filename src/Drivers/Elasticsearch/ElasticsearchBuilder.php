@@ -95,14 +95,28 @@ class ElasticsearchBuilder extends Builder
     /**
      * @return array
      */
+    private function fuzzy()
+    {
+        $must = [];
+
+        foreach ($this->fuzzy as $term => $query) {
+            $must[] = ['fuzzy' => [$term => $query]];
+        }
+
+        return compact('must');
+    }
+
+    /**
+     * @return array
+     */
     private function range()
     {
         $ranges = [];
         $must = [];
 
-        foreach ($this->range as $rangeQuery) {
-            $operator = self::ELASTICSEARCH_RANGE_OPERATORS[array_search($rangeQuery[1], self::RANGE_OPERATORS)];
-            $ranges[$rangeQuery[0]][$operator] = $rangeQuery[2];
+        foreach ($this->range as $query) {
+            $operator = self::ELASTICSEARCH_RANGE_OPERATORS[array_search($query[1], self::RANGE_OPERATORS)];
+            $ranges[$query[0]][$operator] = $query[2];
         }
 
         foreach ($ranges as $key => $value) {
@@ -128,9 +142,9 @@ class ElasticsearchBuilder extends Builder
     {
         return [
             'query' => [
-                'bool' => array_merge_recursive($this->match(), $this->filter(), $this->range())
+                'bool' => array_merge_recursive($this->match(), $this->filter(), $this->range(), $this->fuzzy()),
             ],
-            'sort' => $this->sort()
+            'sort' => $this->sort(),
         ];
     }
 

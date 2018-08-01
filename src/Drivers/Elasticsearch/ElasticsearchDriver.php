@@ -91,7 +91,9 @@ class ElasticsearchDriver extends Driver
      * Update search indices
      *
      * @param  ElasticsearchModel[] $models
+     *
      * @return void
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     protected function index($models): void
     {
@@ -107,7 +109,9 @@ class ElasticsearchDriver extends Driver
      * Delete model documents
      *
      * @param ElasticsearchModel[] $models
+     *
      * @return void
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     protected function delete($models): void
     {
@@ -131,7 +135,9 @@ class ElasticsearchDriver extends Driver
      * Restore deleted search indices
      *
      * @param ElasticsearchModel[] $models
+     *
      * @return void
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     protected function restore($models): void
     {
@@ -150,7 +156,7 @@ class ElasticsearchDriver extends Driver
      * @param ElasticsearchModel[] $models
      *
      * @return void
-     * @throws \Exception
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     protected function flush($models): void
     {
@@ -168,7 +174,9 @@ class ElasticsearchDriver extends Driver
     /**
      * @param ElasticsearchModel[] $models
      * @param \Closure $metadata
+     *
      * @return void
+     * @throws \Naph\Searchlight\Exceptions\SearchlightException
      */
     protected function bulk($models, \Closure $metadata): void
     {
@@ -179,7 +187,7 @@ class ElasticsearchDriver extends Driver
         }
 
         foreach ($query->chunk(840) as $body) {
-            $this->connection->bulk([
+            $this->connection()->bulk([
                 'body' => $body->toArray(),
             ]);
         }

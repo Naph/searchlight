@@ -43,6 +43,11 @@ class Search
     /**
      * @var array
      */
+    protected $fuzzy = [];
+
+    /**
+     * @var array
+     */
     protected $ranges = [];
 
     /**
@@ -131,19 +136,39 @@ class Search
      * Filter terms
      *
      * Filter array example:
-     * $array = [
+     * $filter = [
      *   'field' => 'query',
      *   'field' => null,
      *   ...
      * ];
      *
      * @param array $filter
-     * @return Search
      *
+     * @return Search
      */
     public function filter(array $filter): Search
     {
         $this->filters[] = $filter;
+
+        return $this;
+    }
+
+    /**
+     * Fuzzy terms
+     *
+     * Fuzzy array example:
+     * $fuzzy = [
+     *   'field' => 'query',
+     *   ...
+     * ];
+     *
+     * @param array $fuzzy
+     *
+     * @return Search
+     */
+    public function fuzzy(array $fuzzy): Search
+    {
+        $this->fuzzy[] = $fuzzy;
 
         return $this;
     }
@@ -161,25 +186,23 @@ class Search
      * or as single:
      * $range = ['term', '>=', 'number'];
      *
-     * @param array $range
+     * @param array ...$range
+     *
      * @return Search
-     * @throws \UnexpectedValueException
      */
-    public function range(array $range): Search
+    public function range(array ...$range): Search
     {
-        $range = is_array(reset($range)) ? $range : [$range];
-
         foreach ($range as $key => $array) {
             if (! ($array[2] ?? false)) {
-                unset($range[$key]);
+                continue;
             }
 
             if (! in_array($array[1], Builder::RANGE_OPERATORS)) {
                 throw new \UnexpectedValueException("Range operator is not recognised: `{$array[1]}`");
             }
-        }
 
-        $this->ranges[] = $range;
+            $this->ranges[] = $array;
+        }
 
         return $this;
     }
@@ -257,6 +280,10 @@ class Search
             $builder->addFilter($filter);
         }
 
+        foreach ($this->fuzzy as $fuzzy) {
+            $builder->addFuzzy($fuzzy);
+        }
+
         foreach ($this->ranges as $range) {
             $builder->addRange($range);
         }
@@ -305,22 +332,6 @@ class Search
     public function get(): Collection
     {
         return $this->builder()->get();
-    }
-
-    /**
-     * Fetch results using search-as-you-type completion
-     *
-     * @return Collection
-     */
-    public function completion(): Collection
-    {
-        return collect($this->builder()->completion())->map(function (SearchlightContract $model) {
-            foreach ($model->getSearchableFields() as $field => $boost) {
-                return $model->{$field === 0 ? $boost : $field};
-            }
-
-            return null;
-        });
     }
 
     /**

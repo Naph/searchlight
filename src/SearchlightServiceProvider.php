@@ -24,27 +24,30 @@ class SearchlightServiceProvider extends ServiceProvider
 
     public function register()
     {
+        $runningInConsole = $this->app->runningInConsole();
+        $bindMethod = $runningInConsole ? 'bind' : 'singleton';
+
         $this->mergeConfigFrom(
             __DIR__.'/../config/searchlight.php', 'searchlight'
         );
 
         // Singleton the Searchlight driver manager
-        $this->app->singleton('searchlight', function ($app) {
+        $this->app->{$bindMethod}('searchlight', function ($app) {
             return new DriverManager($app);
         });
 
         // Singleton the default Searchlight driver
-        $this->app->singleton(Driver::class, function ($app) {
+        $this->app->{$bindMethod}(Driver::class, function ($app) {
             return $app['searchlight']->driver();
         });
 
         // Singleton the Searchlight search builder
-        $this->app->singleton(Search::class, function ($app) {
+        $this->app->{$bindMethod}(Search::class, function ($app) {
             return new Search($app);
         });
 
         // Register commands when running in console
-        if ($this->app->runningInConsole()) {
+        if ($runningInConsole) {
             $this->commands([
                 Commands\Flush::class,
                 Commands\FlushAll::class,

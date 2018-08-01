@@ -34,6 +34,11 @@ abstract class Builder
     /**
      * @var array
      */
+    protected $fuzzy = [];
+
+    /**
+     * @var array
+     */
     protected $range = [];
 
     /**
@@ -99,6 +104,14 @@ abstract class Builder
         $this->match[] = $match;
     }
 
+     /**
+     * @param array $filter
+     */
+    public function addFuzzy(array $filter)
+    {
+        $this->fuzzy = array_merge_recursive($this->fuzzy, $filter);
+    }
+
     /**
      * @param array $filter
      */
@@ -130,6 +143,7 @@ abstract class Builder
     {
         return empty($this->match)
             && empty($this->filter)
+            && empty($this->fuzzy)
             && empty($this->range)
             && empty($this->sort);
     }
