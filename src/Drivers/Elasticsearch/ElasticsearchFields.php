@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Naph\Searchlight\Drivers\Elasticsearch;
 
+use Naph\Searchlight\Exceptions\SearchlightException;
 use Naph\Searchlight\Model\Fields;
 
 class ElasticsearchFields extends Fields
@@ -11,7 +12,7 @@ class ElasticsearchFields extends Fields
      * @param array $fields
      *
      * @return ElasticsearchFields
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     public static function collect(array $fields): ElasticsearchFields
     {

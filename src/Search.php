@@ -310,6 +310,7 @@ class Search
     {
         return empty($this->matches)
             && empty($this->filters)
+            && empty($this->fuzzy)
             && empty($this->ranges)
             && empty($this->sorts);
     }

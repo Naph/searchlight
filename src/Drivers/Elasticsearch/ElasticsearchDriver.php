@@ -32,7 +32,7 @@ class ElasticsearchDriver extends Driver
      * Return new or existing Elasticsearch connection
      *
      * @return Client
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     public function connection()
     {
@@ -93,7 +93,7 @@ class ElasticsearchDriver extends Driver
      * @param  ElasticsearchModel[] $models
      *
      * @return void
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     protected function index($models): void
     {
@@ -111,7 +111,7 @@ class ElasticsearchDriver extends Driver
      * @param ElasticsearchModel[] $models
      *
      * @return void
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     protected function delete($models): void
     {
@@ -137,7 +137,7 @@ class ElasticsearchDriver extends Driver
      * @param ElasticsearchModel[] $models
      *
      * @return void
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     protected function restore($models): void
     {
@@ -156,7 +156,7 @@ class ElasticsearchDriver extends Driver
      * @param ElasticsearchModel[] $models
      *
      * @return void
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     protected function flush($models): void
     {
@@ -176,7 +176,7 @@ class ElasticsearchDriver extends Driver
      * @param \Closure $metadata
      *
      * @return void
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     protected function bulk($models, \Closure $metadata): void
     {
@@ -194,8 +194,8 @@ class ElasticsearchDriver extends Driver
     }
 
     /**
-     * @throws \Elasticsearch\Common\Exceptions\NoNodesAvailableException
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws NoNodesAvailableException
+     * @throws SearchlightException
      */
     private function buildIndices()
     {

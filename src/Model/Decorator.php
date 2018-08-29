@@ -21,7 +21,7 @@ class Decorator implements SearchlightContract
     protected $model;
 
     /**
-     * @var \Naph\Searchlight\Model\Fields
+     * @var Fields
      */
     protected $fields;
 
@@ -31,7 +31,7 @@ class Decorator implements SearchlightContract
      * @param Driver $driver
      * @param SearchlightContract $model
      *
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     public function __construct(Driver $driver, SearchlightContract $model)
     {
@@ -52,7 +52,7 @@ class Decorator implements SearchlightContract
     }
 
     /**
-     * Get index from model
+     * Get index for the type
      *
      * @return string
      */
@@ -118,6 +118,8 @@ class Decorator implements SearchlightContract
         if (method_exists($this->model, $name)) {
             return call_user_func_array([$this->model, $name], $arguments);
         }
+
+        throw new \BadMethodCallException();
     }
 
     /**

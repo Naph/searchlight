@@ -136,13 +136,18 @@ class ElasticsearchBuilder extends Builder
 
     /**
      * @return array
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     private function query(): array
     {
         return [
             'query' => [
-                'bool' => array_merge_recursive($this->match(), $this->filter(), $this->range(), $this->fuzzy()),
+                'bool' => array_merge_recursive(
+                    $this->match(),
+                    $this->filter(),
+                    $this->fuzzy(),
+                    $this->range()
+                ),
             ],
             'sort' => $this->sort(),
         ];
@@ -152,7 +157,7 @@ class ElasticsearchBuilder extends Builder
      * Eloquent builder
      *
      * @return EloquentBuilder
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     public function build(): EloquentBuilder
     {
@@ -167,7 +172,7 @@ class ElasticsearchBuilder extends Builder
      * Eloquent collection
      *
      * @return Collection
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     public function get(): Collection
     {
@@ -180,7 +185,7 @@ class ElasticsearchBuilder extends Builder
      * Search-as-you-type enhanced get
      *
      * @return Collection
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     public function completion(): Collection
     {
@@ -191,7 +196,7 @@ class ElasticsearchBuilder extends Builder
 
     /**
      * @return EloquentBuilder
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     private function singleSearch(): EloquentBuilder
     {
@@ -209,16 +214,15 @@ class ElasticsearchBuilder extends Builder
             'body' => $this->query()
         ]);
 
-        $total = $results['hits']['total'];
-        $documents = $results['hits']['hits'];
-        $documentIds = array_column($documents, '_id');
+        $hits = collect($results['hits']['hits']);
+        $ids = $hits->pluck('_id')->toArray();
 
-        return $this->convertQuery($model, $documentIds);
+        return $this->convertQuery($model, $ids);
     }
 
     /**
      * @return Collection
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     private function multiSearch(): Collection
     {
@@ -240,14 +244,14 @@ class ElasticsearchBuilder extends Builder
             $this->match[$key]['fields'] = $fields;
         }
 
-        $searchResults = $this->driver->connection()->search([
+        $results = $this->driver->connection()->search([
             'size' => $this->size ?: $this->driver->config('size'),
             'index' => $indices,
             'type' => array_keys($contracts),
             'body' => $this->query(),
         ]);
 
-        $hits = collect($searchResults['hits']['hits']);
+        $hits = collect($results['hits']['hits']);
         $types = $hits->pluck('_type')->unique();
 
         foreach ($types as $type) {

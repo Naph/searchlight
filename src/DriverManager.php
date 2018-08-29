@@ -2,6 +2,7 @@
 
 namespace Naph\Searchlight;
 
+use Illuminate\Contracts\Foundation\Application;
 use Naph\Searchlight\Drivers\Elasticsearch\ElasticsearchDriver;
 use Naph\Searchlight\Drivers\Eloquent\EloquentDriver;
 use Illuminate\Bus\Dispatcher as BusDispatcher;
@@ -15,7 +16,7 @@ class DriverManager
     /**
      * The application
      *
-     * @var \Illuminate\Contracts\Foundation\Application
+     * @var Application
      */
     protected $app;
 
@@ -41,9 +42,9 @@ class DriverManager
     /**
      * DriverManager constructor.
      *
-     * @param \Illuminate\Contracts\Foundation\Application $app
+     * @param Application $app
      */
-    public function __construct($app)
+    public function __construct(Application $app)
     {
         $this->app = $app;
     }

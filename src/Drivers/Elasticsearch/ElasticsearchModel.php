@@ -2,6 +2,7 @@
 
 namespace Naph\Searchlight\Drivers\Elasticsearch;
 
+use Naph\Searchlight\Exceptions\SearchlightException;
 use Naph\Searchlight\Model\Decorator;
 
 class ElasticsearchModel extends Decorator
@@ -22,7 +23,7 @@ class ElasticsearchModel extends Decorator
      * @param bool $trashed
      *
      * @return array
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     public function metadata(bool $trashed = false): array
     {
@@ -37,7 +38,7 @@ class ElasticsearchModel extends Decorator
 
     /**
      * @return array
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     public function body(): array
     {
@@ -52,7 +53,7 @@ class ElasticsearchModel extends Decorator
 
     /**
      * @return array
-     * @throws \Naph\Searchlight\Exceptions\SearchlightException
+     * @throws SearchlightException
      */
     public function mapping(): array
     {

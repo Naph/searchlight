@@ -104,7 +104,7 @@ abstract class Builder
         $this->match[] = $match;
     }
 
-     /**
+    /**
      * @param array $filter
      */
     public function addFuzzy(array $filter)
