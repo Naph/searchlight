@@ -3,8 +3,8 @@
 namespace Naph\Searchlight;
 
 use Illuminate\Contracts\Foundation\Application;
-use Naph\Searchlight\Drivers\Elasticsearch\ElasticsearchDriver;
-use Naph\Searchlight\Drivers\Eloquent\EloquentDriver;
+use Naph\Searchlight\Drivers\Elasticsearch\Driver as ElasticsearchDriver;
+use Naph\Searchlight\Drivers\Eloquent\Driver as EloquentDriver;
 use Illuminate\Bus\Dispatcher as BusDispatcher;
 
 /**

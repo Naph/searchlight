@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 - More tests
 - Commented the configuration
 - Driver can be changed at query level
+- Pagination
 ### Changed
 - Major refactoring to internal indexing structure to simplify driver implementation
 - Allow custom drivers an easier way to decorate models, removing bloat from model traits

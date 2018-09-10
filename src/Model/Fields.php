@@ -47,7 +47,7 @@ class Fields implements Arrayable
      */
     public function setField(string $key, float $boost, ?string $type = null)
     {
-        $this->fields[$key] = compact('boost', 'type');
+        $this->fields[$key] = compact('key', 'boost', 'type');
     }
 
     /**

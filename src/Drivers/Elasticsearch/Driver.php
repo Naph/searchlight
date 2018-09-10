@@ -4,19 +4,22 @@ namespace Naph\Searchlight\Drivers\Elasticsearch;
 
 use Elasticsearch\Common\Exceptions\NoNodesAvailableException;
 use Elasticsearch\{
-    Client, ClientBuilder
+    Client,
+    ClientBuilder
 };
 use GuzzleHttp\Ring\Client\MockHandler;
+use Naph\Searchlight\Exceptions\SearchlightException;
 use Naph\Searchlight\{
-    Builder, Driver, Exceptions\SearchlightException
+    Builder as SearchlightBuilder,
+    Driver as SearchlightDriver
 };
 
-class ElasticsearchDriver extends Driver
+class Driver extends SearchlightDriver
 {
     /**
      * @var string
      */
-    protected $decorator = ElasticsearchModel::class;
+    protected $decorator = Document::class;
 
     /**
      * @var Client
@@ -27,6 +30,11 @@ class ElasticsearchDriver extends Driver
      * @var MockHandler
      */
     public static $handler;
+
+    /**
+     * @var \Closure
+     */
+    private static $currentScrollResolver;
 
     /**
      * Return new or existing Elasticsearch connection
@@ -82,22 +90,22 @@ class ElasticsearchDriver extends Driver
      *
      * @return Builder
      */
-    public function builder(): Builder
+    public function builder(): SearchlightBuilder
     {
-        return new ElasticsearchBuilder($this);
+        return new Builder($this);
     }
 
     /**
      * Update search indices
      *
-     * @param  ElasticsearchModel[] $models
+     * @param  Document[] $models
      *
      * @return void
      * @throws SearchlightException
      */
     protected function index($models): void
     {
-        $this->bulk($models, function (ElasticsearchModel $model) {
+        $this->bulk($models, function (Document $model) {
             return [
                 ['index' => $model->metadata($model->isSoftDeleted())],
                 $model->body(),
@@ -108,14 +116,14 @@ class ElasticsearchDriver extends Driver
     /**
      * Delete model documents
      *
-     * @param ElasticsearchModel[] $models
+     * @param Document[] $models
      *
      * @return void
      * @throws SearchlightException
      */
     protected function delete($models): void
     {
-        $this->bulk($models, function (ElasticsearchModel $model) {
+        $this->bulk($models, function (Document $model) {
             $actions = [
                 ['delete' => $model->metadata()],
             ];
@@ -134,14 +142,14 @@ class ElasticsearchDriver extends Driver
     /**
      * Restore deleted search indices
      *
-     * @param ElasticsearchModel[] $models
+     * @param Document[] $models
      *
      * @return void
      * @throws SearchlightException
      */
     protected function restore($models): void
     {
-        $this->bulk($models, function (ElasticsearchModel $model) {
+        $this->bulk($models, function (Document $model) {
             return [
                 ['delete' => $model->metadata(true)],
                 ['index' => $model->metadata()],
@@ -153,7 +161,7 @@ class ElasticsearchDriver extends Driver
     /**
      * Flush all models of type
      *
-     * @param ElasticsearchModel[] $models
+     * @param Document[] $models
      *
      * @return void
      * @throws SearchlightException
@@ -172,7 +180,7 @@ class ElasticsearchDriver extends Driver
     }
 
     /**
-     * @param ElasticsearchModel[] $models
+     * @param Document[] $models
      * @param \Closure $metadata
      *
      * @return void
@@ -209,7 +217,7 @@ class ElasticsearchDriver extends Driver
 
         foreach ($this->repositories as $repository) {
             $mapping = [];
-            $model = new ElasticsearchModel($this, new $repository());
+            $model = new Document($this, new $repository());
             $index = $model->getSearchableIndex();
 
             if (!isset($indices[$index])) {
@@ -227,5 +235,29 @@ class ElasticsearchDriver extends Driver
                 ]);
             }
         }
+    }
+
+    /**
+     * Resolve the current batch or return the default value.
+     *
+     * @return string
+     */
+    static public function resolveCurrentScroll()
+    {
+        if (isset(static::$currentScrollResolver)) {
+            return call_user_func(static::$currentScrollResolver);
+        }
+
+        return null;
+    }
+
+    /**
+     * Set the current scroll resolver callback
+     *
+     * @param \Closure $resolver
+     */
+    static public function currentScrollResolver(\Closure $resolver)
+    {
+        static::$currentScrollResolver = $resolver;
     }
 }

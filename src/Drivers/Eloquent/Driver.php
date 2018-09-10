@@ -4,10 +4,10 @@ namespace Naph\Searchlight\Drivers\Eloquent;
 
 use Naph\Searchlight\Model\Decorator;
 use Naph\Searchlight\{
-    Builder, Driver
+    Builder as SearchlightBuilder, Driver as SearchlightDriver
 };
 
-class EloquentDriver extends Driver
+class Driver extends SearchlightDriver
 {
     public $supportsIndexing = false;
 
@@ -16,9 +16,9 @@ class EloquentDriver extends Driver
      *
      * @return Builder
      */
-    public function builder(): Builder
+    public function builder(): SearchlightBuilder
     {
-        return new EloquentBuilder($this);
+        return new Builder($this);
     }
 
     /**

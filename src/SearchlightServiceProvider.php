@@ -5,6 +5,7 @@ namespace Naph\Searchlight;
 
 use Illuminate\Support\ServiceProvider;
 use Naph\Searchlight\Commands;
+use Naph\Searchlight\Drivers\Elasticsearch\Driver as ElasticsearchDriver;
 
 class SearchlightServiceProvider extends ServiceProvider
 {
@@ -44,6 +45,10 @@ class SearchlightServiceProvider extends ServiceProvider
         // Singleton the Searchlight search builder
         $this->app->{$bindMethod}(Search::class, function ($app) {
             return new Search($app);
+        });
+
+        ElasticsearchDriver::currentScrollResolver(function ($config) {
+            return request()->header('X-Searchlight-Scroll');
         });
 
         // Register commands when running in console

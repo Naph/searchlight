@@ -2,11 +2,12 @@
 
 namespace Naph\Searchlight\Drivers\Eloquent;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Naph\Searchlight\Builder;
+use Naph\Searchlight\Builder as SearchlightBuilder;
 use Naph\Searchlight\Model\Decorator;
 
-class EloquentBuilder extends Builder
+class Builder extends SearchlightBuilder
 {
     /**
      * @return Decorator
@@ -77,5 +78,18 @@ class EloquentBuilder extends Builder
     public function completion(): Collection
     {
         return $this->build()->get();
+    }
+
+    /**
+     * Get paginated builder results
+     *
+     * @param int $perPage
+     * @param int $page
+     *
+     * @return LengthAwarePaginator
+     */
+    public function paginate($perPage, $page): LengthAwarePaginator
+    {
+        return $this->build()->paginate($perPage);
     }
 }

@@ -7,9 +7,9 @@ interface SearchlightContract
     /**
      * Searchable properties
      *
-     * @return array
+     * @return array|\Traversable
      */
-    public function getSearchableFields(): array;
+    public function getSearchableFields();
 
     /**
      * Custom index in which this model is stored

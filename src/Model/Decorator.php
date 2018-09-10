@@ -37,14 +37,22 @@ class Decorator implements SearchlightContract
     {
         $this->driver = $driver;
         $this->model = $model;
-        $this->fields = new Fields($model->getSearchableFields());
+        try {
+            $this->fields = new Fields($model->getSearchableFields());
+        } catch (SearchlightException $e) {
+            throw new SearchlightException(sprintf('(%s): %s', get_class($this->models[0]), $e->getMessage()));
+        }
+    }
+
+    public function getModelClass(): string
+    {
+        return get_class($this->model);
     }
 
     /**
      * Returns normalized searchable fields
      *
      * @return array
-     * @throws SearchlightException
      */
     public function getSearchableFields(): array
     {
@@ -81,7 +89,7 @@ class Decorator implements SearchlightContract
     {
         $id = $this->model->getKey();
 
-        if (! $id) {
+        if (!$id) {
             throw new SearchlightException('Searchable id is empty.');
         }
 
@@ -111,6 +119,7 @@ class Decorator implements SearchlightContract
      *
      * @param $name
      * @param $arguments
+     *
      * @return mixed
      */
     public function __call($name, $arguments)
@@ -125,11 +134,21 @@ class Decorator implements SearchlightContract
     /**
      * Bridge dynamic model attributes
      *
-     * @param  string  $key
+     * @param  string $key
+     *
      * @return mixed
      */
     public function __get($key)
     {
+        switch ($key) {
+            case 'searchableIndex':
+                return $this->getSearchableIndex();
+            case 'searchableFields':
+                return $this->getSearchableFields();
+            case 'searchableType':
+                return $this->getSearchableType();
+        }
+
         return $this->model->getAttribute($key);
     }
 }

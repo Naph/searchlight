@@ -38,7 +38,6 @@ return [
     | Here you can populate the models implementing the SearchlightContract
     | you wish to index. Models listed here will trigger jobs when created,
     | saved, deleted and restored in order to keep the index up to date.
-    | NOTE: Not all drivers support indexing.
     |
     */
 
@@ -68,10 +67,6 @@ return [
                     'port'   => env('ELASTICSEARCH_PORT', '9200'),
                 ]
             ],
-        ],
-
-        'eloquent' => [
-
         ],
 
     ]

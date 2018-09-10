@@ -2,7 +2,7 @@
 
 namespace Naph\Searchlight\Tests\Eloquent;
 
-use Naph\Searchlight\Drivers\Eloquent\EloquentDriver;
+use Naph\Searchlight\Drivers\Eloquent\Driver;
 use Naph\Searchlight\Search;
 use Naph\Searchlight\SearchlightServiceProvider;
 use Naph\Searchlight\Tests\SearchlightTestCase;
@@ -10,7 +10,7 @@ use Naph\Searchlight\Tests\SearchlightTestCase;
 class EloquentTestCase extends SearchlightTestCase
 {
     /**
-     * @var EloquentDriver
+     * @var Driver
      */
     protected $driver;
 

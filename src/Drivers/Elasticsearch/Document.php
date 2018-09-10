@@ -5,7 +5,7 @@ namespace Naph\Searchlight\Drivers\Elasticsearch;
 use Naph\Searchlight\Exceptions\SearchlightException;
 use Naph\Searchlight\Model\Decorator;
 
-class ElasticsearchModel extends Decorator
+class Document extends Decorator
 {
     /**
      * Get soft deleted index
@@ -38,7 +38,6 @@ class ElasticsearchModel extends Decorator
 
     /**
      * @return array
-     * @throws SearchlightException
      */
     public function body(): array
     {
@@ -53,7 +52,20 @@ class ElasticsearchModel extends Decorator
 
     /**
      * @return array
-     * @throws SearchlightException
+     */
+    public function boostedFields()
+    {
+        $fields = [];
+
+        foreach ($this->getSearchableFields() as $name => $field) {
+            $fields[] = $name . '^' . $field['boost'];
+        }
+
+        return $fields;
+    }
+
+    /**
+     * @return array
      */
     public function mapping(): array
     {
@@ -92,5 +104,19 @@ class ElasticsearchModel extends Decorator
     public function isSoftDeleted(): bool
     {
         return method_exists($this->model, 'trashed') && $this->model->trashed();
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return mixed|string
+     */
+    public function __get($key)
+    {
+        if ($key === 'trashedIndex') {
+            return $this->getTrashedIndex();
+        }
+
+        return parent::__get($key);
     }
 }

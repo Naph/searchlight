@@ -5,6 +5,7 @@ namespace Naph\Searchlight;
 
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Naph\Searchlight\Model\SearchlightContract;
 
@@ -66,6 +67,11 @@ class Search
     protected $take = null;
 
     /**
+     * @var \Closure
+     */
+    protected static $currentBatchResolver;
+
+    /**
      * Search constructor.
      *
      * @param Container $app
@@ -116,12 +122,12 @@ class Search
     /**
      * Search by matching multiple fields with one query string
      *
-     * @param string|array  $query
-     * @param string|array|null  $fields
+     * @param string  $query
+     * @param array  $fields
      *
      * @return Search
      */
-    public function match($query, $fields = null): Search
+    public function match(string $query, array $fields = []): Search
     {
         if (! $query) {
             return $this;
@@ -333,6 +339,22 @@ class Search
     public function get(): Collection
     {
         return $this->builder()->get();
+    }
+
+    /**
+     * Fetch paginated results
+     *
+     * @param int $perPage
+     * @param string $pageName
+     * @param null|int $page
+     *
+     * @return Collection
+     */
+    public function paginate(int $perPage = 15, string $pageName = 'page', ?int $page = null)
+    {
+        $page = $page ?: Paginator::resolveCurrentPage($pageName);
+
+        return $this->builder()->paginate($perPage, $page);
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace Naph\Searchlight\Tests\Elasticsearch;
 
-use Naph\Searchlight\Drivers\Elasticsearch\ElasticsearchDriver;
+use Naph\Searchlight\Drivers\Elasticsearch\Driver;
 use Naph\Searchlight\Search;
 use Naph\Searchlight\SearchlightServiceProvider;
 use Naph\Searchlight\Tests\SearchlightTestCase;
@@ -10,7 +10,7 @@ use Naph\Searchlight\Tests\SearchlightTestCase;
 class ElasticsearchTestCase extends SearchlightTestCase
 {
     /**
-     * @var ElasticsearchDriver
+     * @var Driver
      */
     protected $driver;
 

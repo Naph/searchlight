@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Naph\Searchlight;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Naph\Searchlight\Model\{
     Decorator, SearchlightContract
@@ -67,7 +68,7 @@ abstract class Builder
     }
 
     /**
-     * Fresh builder instance
+     * Get builder instance
      *
      * @return EloquentBuilder
      */
@@ -81,12 +82,14 @@ abstract class Builder
     abstract public function get(): Collection;
 
     /**
-     * Search-as-you-type enhanced get
+     * Get paginated builder results
      *
-     * @return Collection
+     * @param int $perPage
+     * @param int $page
+     *
+     * @return LengthAwarePaginator
      */
-    abstract public function completion(): Collection;
-
+    abstract public function paginate($perPage, $page): LengthAwarePaginator;
 
     /**
      * @param SearchlightContract $model
